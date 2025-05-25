@@ -221,17 +221,16 @@ double calculate_availability(double cpu_usage, double memory_usage, double avg_
     // 归一化指标
     double cpu_score = 1.0 - (cpu_usage / 100.0);
     double memory_score = 1.0 - (memory_usage / 100.0);
+    
+    // 网络延迟评分计算（权重40%）
     double network_score = (MAX_LATENCY - fmin(avg_latency, MAX_LATENCY*2)) / MAX_LATENCY;
     network_score = fmax(0, fmin(1, network_score));
     
-    // 权重分配
-    const double weights[] = {0.3, 0.3, 0.4}; // CPU,内存,网络
+    // 权重分配（CPU 30%, 内存 30%, 网络 40%）
+    const double weights[] = {0.3, 0.3, 0.4};
     double availability = (cpu_score * weights[0]) + 
                         (memory_score * weights[1]) + 
                         (network_score * weights[2]);
-    
-    // 确保最低可用性
-    availability = fmax(MIN_AVAILABILITY/100.0, availability);
     
     return availability * 100.0;
 }
