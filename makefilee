@@ -1,0 +1,44 @@
+# Compiler settings
+CC = gcc
+CFLAGS = -Wall -Wextra -O2 -std=c99 -D_GNU_SOURCE
+LDFLAGS = -lpthread
+CLIENT_LDFLAGS = -lcurl -lpthread
+
+# Targets
+TARGET = heartbeat_client
+SERVER_TARGET = heartbeat_server
+
+# Source files
+CLIENT_SRCS = heartbeat_client.c
+SERVER_SRCS = heartbeat_server.c
+
+# Object files
+CLIENT_OBJS = $(CLIENT_SRCS:.c=.o)
+SERVER_OBJS = $(SERVER_SRCS:.c=.o)
+
+# Default target
+all: $(TARGET) $(SERVER_TARGET)
+
+# Client build
+$(TARGET): $(CLIENT_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(CLIENT_LDFLAGS)
+
+# Server build
+$(SERVER_TARGET): $(SERVER_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+# Pattern rule for object files
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Cleanup
+clean:
+	rm -f $(CLIENT_OBJS) $(SERVER_OBJS) $(TARGET) $(SERVER_TARGET)
+
+# Install (optional)
+install: all
+	install -m 0755 $(SERVER_TARGET) /usr/local/bin/
+	install -m 0755 $(TARGET) /usr/local/bin/
+
+# Phony targets
+.PHONY: all clean install
