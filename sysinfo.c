@@ -422,6 +422,89 @@ void trace_route(const char *dest) {
     close(ctx.sockfd);
 }
 
+// 在常量定义区域新增
+#define MAX_THREADS 10
+
+// 新增结果结构体
+typedef struct {
+    char url[256];
+    double latency;
+    char trace_info[1024];
+} TestResult;
+
+// 新增全局共享数据
+TestResult results[MAX_URLS];
+int result_count = 0;
+// 在头文件包含区域添加
+#include <pthread.h>
+
+// 在函数原型声明区域添加
+void trace_route_to_buffer(const char *dest, FILE *out);
+
+// ... 其他已有头文件包含保持不变 ...
+
+// 修改全局互斥锁初始化（确保包含头文件后）
+pthread_mutex_t result_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// 实现trace_route_to_buffer函数（在trace_route之前）
+void trace_route_to_buffer(const char *dest, FILE *out) {
+    // 复制trace_route函数内容并修改所有printf为fprintf到out参数
+    fprintf(out, "\n=== Route to %s ===\n", dest);
+    
+    const char *host = dest;
+    const char *protocol_pos = strstr(dest, "://");
+    if (protocol_pos) {
+        host = protocol_pos + 3;
+    }
+
+    struct hostent *hent = gethostbyname(host);
+    if (!hent || !hent->h_addr_list[0]) {
+        printf("Can't resolve host: %s\n", host);
+        return;
+    }
+
+    TraceRouteContext ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    ctx.target.sin_family = AF_INET;
+    memcpy(&ctx.target.sin_addr, hent->h_addr_list[0], sizeof(struct in_addr));
+    ctx.ttl = 1;
+
+    if ((ctx.sockfd = create_icmp_socket()) < 0) return;
+
+    while (ctx.ttl <= TR_MAX_HOPS) {
+        char hostname[NI_MAXHOST] = {0};
+        char ip[INET_ADDRSTRLEN] = {0};
+        int icmp_type = -1;  // 用于存储接收到的ICMP类型
+        
+        gettimeofday(&ctx.start_time, NULL);
+        
+        if (send_probe(&ctx) < 0) break;
+        icmp_type = recv_response(&ctx, hostname, ip);
+        
+        struct timeval end_time;
+        gettimeofday(&end_time, NULL);
+        double elapsed = (end_time.tv_sec - ctx.start_time.tv_sec) * 1000.0;
+        elapsed += (end_time.tv_usec - ctx.start_time.tv_usec) / 1000.0;
+
+        if (icmp_type != -1) {
+            printf("%2d  %-15s  %-25s  %5.1f ms\n", ctx.ttl, ip,
+                   (strcmp(hostname, "*") != 0) ? hostname : "", elapsed);
+            
+            // 通过ICMP类型判断是否到达目标
+            if (icmp_type == ICMP_ECHOREPLY) {
+                printf("Destination reached after %d hops\n", ctx.ttl);
+                break;
+            }
+        } else {
+            printf("%2d  %-15s\n", ctx.ttl, "***");
+        }
+        
+        ctx.ttl++;
+    }
+    close(ctx.sockfd);
+}
+
+// 修改主函数
 int main() {
     check_privileges();
     signal(SIGINT, handle_signal);
