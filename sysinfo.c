@@ -9,10 +9,12 @@
 #include <math.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
+#include <netinet/icmp6.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <pthread.h>
 
 #define MAX_URLS 10
 #define TIMEOUT_SEC 10
@@ -23,7 +25,10 @@
 #define TR_TIMEOUT 2
 #define TR_PACKET_SIZE 64
 #define TR_PORT 33434
+#define TR_PORT_V6 33434
 #define ICMP_HEADER_LEN 8
+#define ICMP6_HEADER_LEN 8
+#define MAX_THREADS 10
 
 typedef struct {
     const char *name;
@@ -32,13 +37,25 @@ typedef struct {
 } TimeMetric;
 
 typedef struct {
-    struct sockaddr_in target;
+    union {
+        struct sockaddr_in v4;
+        struct sockaddr_in6 v6;
+    } target;
     int sockfd;
     int ttl;
     struct timeval start_time;
+    int is_ipv6;
 } TraceRouteContext;
 
 struct icmp_header {
+    uint8_t type;
+    uint8_t code;
+    uint16_t checksum;
+    uint16_t id;
+    uint16_t seq;
+};
+
+struct icmp6_header {
     uint8_t type;
     uint8_t code;
     uint16_t checksum;
@@ -69,7 +86,8 @@ double test_url_latency(const char *url);
 double calculate_availability(double cpu_usage, double memory_usage, double avg_latency, int data_status);
 void handle_signal(int sig);
 void trace_route(const char *dest);
-static int create_icmp_socket();
+void trace_route_to_buffer(const char *dest, FILE *out);
+static int create_icmp_socket(int is_ipv6);
 static int send_probe(TraceRouteContext *ctx);
 static int recv_response(TraceRouteContext *ctx, char *host, char *ip);
 unsigned short in_cksum(unsigned short *addr, int len);
@@ -105,7 +123,7 @@ void check_privileges() {
 
 void print_local_ip() {
     struct ifaddrs *ifaddr, *ifa;
-    char ip[INET_ADDRSTRLEN];
+    char ip[INET6_ADDRSTRLEN];
 
     if (getifaddrs(&ifaddr) == -1) {
         perror("getifaddrs failed");
@@ -114,13 +132,20 @@ void print_local_ip() {
 
     printf("\n=== Local IP Addresses ===\n");
     for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-        if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET) 
+        if (!ifa->ifa_addr) 
             continue;
-        
-        void *addr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
-        inet_ntop(AF_INET, addr, ip, sizeof(ip));
-        if (strcmp(ifa->ifa_name, "lo") != 0)
-            printf("%-8s: %s\n", ifa->ifa_name, ip);
+
+        if (ifa->ifa_addr->sa_family == AF_INET) {
+            void *addr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+            inet_ntop(AF_INET, addr, ip, sizeof(ip));
+            if (strcmp(ifa->ifa_name, "lo") != 0)
+                printf("%-8s IPv4: %s\n", ifa->ifa_name, ip);
+        } else if (ifa->ifa_addr->sa_family == AF_INET6) {
+            void *addr = &((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr;
+            inet_ntop(AF_INET6, addr, ip, sizeof(ip));
+            if (strcmp(ifa->ifa_name, "lo") != 0)
+                printf("%-8s IPv6: %s\n", ifa->ifa_name, ip);
+        }
     }
     freeifaddrs(ifaddr);
 }
@@ -292,13 +317,22 @@ void handle_signal(int sig) {
     exit(0);
 }
 
-static int create_icmp_socket() {
-    int sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-    if (sock < 0) {
-        perror("Can't create raw socket");
-        return -1;
+static int create_icmp_socket(int is_ipv6) {
+    int sock;
+    if (is_ipv6) {
+        sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
+        if (sock < 0) {
+            perror("Can't create raw IPv6 socket");
+            return -1;
+        }
+    } else {
+        sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+        if (sock < 0) {
+            perror("Can't create raw IPv4 socket");
+            return -1;
+        }
     }
-    
+
     struct timeval tv = {TR_TIMEOUT, 0};
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
     return sock;
@@ -306,35 +340,56 @@ static int create_icmp_socket() {
 
 static int send_probe(TraceRouteContext *ctx) {
     char packet[TR_PACKET_SIZE];
-    struct icmp_header *icmp = (struct icmp_header *)packet;
-    
-    memset(packet, 0, sizeof(packet));
-    icmp->type = ICMP_ECHO;
-    icmp->code = 0;
-    icmp->id = getpid() & 0xFFFF;
-    icmp->seq = ctx->ttl;
-    icmp->checksum = in_cksum((unsigned short *)icmp, sizeof(packet));
+    if (ctx->is_ipv6) {
+        struct icmp6_header *icmp = (struct icmp6_header *)packet;
+        memset(packet, 0, sizeof(packet));
+        icmp->type = ICMP6_ECHO_REQUEST;
+        icmp->code = 0;
+        icmp->id = getpid() & 0xFFFF;
+        icmp->seq = ctx->ttl;
+        // ICMPv6 checksum calculation is more complex and may require pseudo-header
+        // For simplicity, we set it to 0 here, the kernel will handle it
+        icmp->checksum = 0;
 
-    if (setsockopt(ctx->sockfd, IPPROTO_IP, IP_TTL, 
-                  &ctx->ttl, sizeof(ctx->ttl)) < 0) {
-        perror("Can't set TTL");
-        return -1;
+        if (setsockopt(ctx->sockfd, IPPROTO_IPV6, IPV6_UNICAST_HOPS, 
+                      &ctx->ttl, sizeof(ctx->ttl)) < 0) {
+            perror("Can't set IPv6 TTL");
+            return -1;
+        }
+
+        return sendto(ctx->sockfd, packet, sizeof(packet), 0,
+                     (struct sockaddr*)&ctx->target.v6, sizeof(ctx->target.v6));
+    } else {
+        struct icmp_header *icmp = (struct icmp_header *)packet;
+        memset(packet, 0, sizeof(packet));
+        icmp->type = ICMP_ECHO;
+        icmp->code = 0;
+        icmp->id = getpid() & 0xFFFF;
+        icmp->seq = ctx->ttl;
+        icmp->checksum = in_cksum((unsigned short *)icmp, sizeof(packet));
+
+        if (setsockopt(ctx->sockfd, IPPROTO_IP, IP_TTL, 
+                      &ctx->ttl, sizeof(ctx->ttl)) < 0) {
+            perror("Can't set TTL");
+            return -1;
+        }
+
+        return sendto(ctx->sockfd, packet, sizeof(packet), 0,
+                     (struct sockaddr*)&ctx->target.v4, sizeof(ctx->target.v4));
     }
-    
-    return sendto(ctx->sockfd, packet, sizeof(packet), 0,
-                 (struct sockaddr*)&ctx->target, sizeof(ctx->target));
 }
 
 static int recv_response(TraceRouteContext *ctx, char *host, char *ip) {
-    struct sockaddr_in from;
-    socklen_t from_len = sizeof(from);
+    union {
+        struct sockaddr_in v4;
+        struct sockaddr_in6 v6;
+    } from;
+    socklen_t from_len = ctx->is_ipv6 ? sizeof(from.v6) : sizeof(from.v4);
     char buf[512];
-    struct ip *ip_hdr;
-    struct icmp_header *icmp_hdr; // 添加变量声明
     int hlen;
 
     ssize_t len = recvfrom(ctx->sockfd, buf, sizeof(buf), 0,
-                         (struct sockaddr*)&from, &from_len);
+                         (struct sockaddr*)(ctx->is_ipv6 ? &from.v6 : &from.v4), &from_len);
     if (len < 0) {
         if (errno != EAGAIN && errno != EWOULDBLOCK) {
             perror("recvfrom failed");
@@ -342,63 +397,103 @@ static int recv_response(TraceRouteContext *ctx, char *host, char *ip) {
         return -1;
     }
 
-    strncpy(ip, inet_ntoa(from.sin_addr), INET_ADDRSTRLEN-1);
-    ip[INET_ADDRSTRLEN-1] = '\0';
-
-    ip_hdr = (struct ip *)buf;
-    hlen = ip_hdr->ip_hl << 2;
-    
-    if (ip_hdr->ip_p != IPPROTO_ICMP || len < hlen + ICMP_HEADER_LEN)
-        return -1;
-
-    icmp_hdr = (struct icmp_header *)(buf + hlen); // 添加解析逻辑
-
-    if (icmp_hdr->type != ICMP_TIMXCEED && icmp_hdr->type != ICMP_ECHOREPLY)
-        return -1;
-
-    if (getnameinfo((struct sockaddr*)&from, sizeof(from),
-                   host, NI_MAXHOST, NULL, 0, 0) != 0) {
-        strncpy(host, "*", NI_MAXHOST-1);
-        host[NI_MAXHOST-1] = '\0';
+    if (ctx->is_ipv6) {
+        inet_ntop(AF_INET6, &from.v6.sin6_addr, ip, INET6_ADDRSTRLEN - 1);
+        ip[INET6_ADDRSTRLEN - 1] = '\0';
+    } else {
+        strncpy(ip, inet_ntoa(from.v4.sin_addr), INET_ADDRSTRLEN - 1);
+        ip[INET_ADDRSTRLEN - 1] = '\0';
     }
-    
-    return icmp_hdr->type; // 返回实际的ICMP类型
+
+    if (ctx->is_ipv6) {
+        struct icmp6_header *icmp_hdr = (struct icmp6_header *)buf;
+        if (icmp_hdr->type != ICMP6_TIME_EXCEEDED && icmp_hdr->type != ICMP6_ECHO_REPLY)
+            return -1;
+
+        if (getnameinfo((struct sockaddr*)&from.v6, sizeof(from.v6),
+                       host, NI_MAXHOST, NULL, 0, 0) != 0) {
+            strncpy(host, "*", NI_MAXHOST - 1);
+            host[NI_MAXHOST - 1] = '\0';
+        }
+
+        return icmp_hdr->type;
+    } else {
+        struct ip *ip_hdr = (struct ip *)buf;
+        hlen = ip_hdr->ip_hl << 2;
+
+        if (ip_hdr->ip_p != IPPROTO_ICMP || len < hlen + ICMP_HEADER_LEN)
+            return -1;
+
+        struct icmp_header *icmp_hdr = (struct icmp_header *)(buf + hlen);
+
+        if (icmp_hdr->type != ICMP_TIMXCEED && icmp_hdr->type != ICMP_ECHOREPLY)
+            return -1;
+
+        if (getnameinfo((struct sockaddr*)&from.v4, sizeof(from.v4),
+                       host, NI_MAXHOST, NULL, 0, 0) != 0) {
+            strncpy(host, "*", NI_MAXHOST - 1);
+            host[NI_MAXHOST - 1] = '\0';
+        }
+
+        return icmp_hdr->type;
+    }
 }
 
-// 修改后的trace_route函数
 void trace_route(const char *dest) {
     printf("\n=== Route to %s ===\n", dest);
-    
+
     const char *host = dest;
     const char *protocol_pos = strstr(dest, "://");
     if (protocol_pos) {
         host = protocol_pos + 3;
     }
 
-    struct hostent *hent = gethostbyname(host);
-    if (!hent || !hent->h_addr_list[0]) {
+    struct addrinfo hints, *res, *p;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_RAW;
+    hints.ai_protocol = IPPROTO_ICMP;
+
+    if (getaddrinfo(host, NULL, &hints, &res) != 0) {
         printf("Can't resolve host: %s\n", host);
         return;
     }
 
     TraceRouteContext ctx;
     memset(&ctx, 0, sizeof(ctx));
-    ctx.target.sin_family = AF_INET;
-    memcpy(&ctx.target.sin_addr, hent->h_addr_list[0], sizeof(struct in_addr));
-    ctx.ttl = 1;
+    for (p = res; p != NULL; p = p->ai_next) {
+        if (p->ai_family == AF_INET) {
+            ctx.is_ipv6 = 0;
+            memcpy(&ctx.target.v4, p->ai_addr, sizeof(ctx.target.v4));
+            break;
+        } else if (p->ai_family == AF_INET6) {
+            ctx.is_ipv6 = 1;
+            memcpy(&ctx.target.v6, p->ai_addr, sizeof(ctx.target.v6));
+            break;
+        }
+    }
 
-    if ((ctx.sockfd = create_icmp_socket()) < 0) return;
+    if (p == NULL) {
+        printf("No valid address found for %s\n", host);
+        freeaddrinfo(res);
+        return;
+    }
+
+    freeaddrinfo(res);
+
+    ctx.ttl = 1;
+    if ((ctx.sockfd = create_icmp_socket(ctx.is_ipv6)) < 0) return;
 
     while (ctx.ttl <= TR_MAX_HOPS) {
         char hostname[NI_MAXHOST] = {0};
-        char ip[INET_ADDRSTRLEN] = {0};
-        int icmp_type = -1;  // 用于存储接收到的ICMP类型
-        
+        char ip[INET6_ADDRSTRLEN] = {0};
+        int icmp_type = -1;
+
         gettimeofday(&ctx.start_time, NULL);
-        
+
         if (send_probe(&ctx) < 0) break;
         icmp_type = recv_response(&ctx, hostname, ip);
-        
+
         struct timeval end_time;
         gettimeofday(&end_time, NULL);
         double elapsed = (end_time.tv_sec - ctx.start_time.tv_sec) * 1000.0;
@@ -407,48 +502,23 @@ void trace_route(const char *dest) {
         if (icmp_type != -1) {
             printf("%2d  %-15s  %-25s  %5.1f ms\n", ctx.ttl, ip,
                    (strcmp(hostname, "*") != 0) ? hostname : "", elapsed);
-            
-            // 通过ICMP类型判断是否到达目标
-            if (icmp_type == ICMP_ECHOREPLY) {
+
+            if ((ctx.is_ipv6 && icmp_type == ICMP6_ECHO_REPLY) ||
+                (!ctx.is_ipv6 && icmp_type == ICMP_ECHOREPLY)) {
                 printf("Destination reached after %d hops\n", ctx.ttl);
                 break;
             }
         } else {
             printf("%2d  %-15s\n", ctx.ttl, "***");
         }
-        
+
         ctx.ttl++;
     }
     close(ctx.sockfd);
 }
 
-// 在常量定义区域新增
-#define MAX_THREADS 10
-
-// 新增结果结构体
-typedef struct {
-    char url[256];
-    double latency;
-    char trace_info[1024];
-} TestResult;
-
-// 新增全局共享数据
-TestResult results[MAX_URLS];
-int result_count = 0;
-// 在头文件包含区域添加
-#include <pthread.h>
-
-// 在函数原型声明区域添加
-void trace_route_to_buffer(const char *dest, FILE *out);
-
-// ... 其他已有头文件包含保持不变 ...
-
-// 修改全局互斥锁初始化（确保包含头文件后）
-pthread_mutex_t result_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-// 实现trace_route_to_buffer函数（在trace_route之前）
 void trace_route_to_buffer(const char *dest, FILE *out) {
-    // 复制trace_route函数内容并修改所有printf为fprintf到out参数
+    // Similar modifications as trace_route function to support IPv6
     fprintf(out, "\n=== Route to %s ===\n", dest);
     
     const char *host = dest;
@@ -457,54 +527,75 @@ void trace_route_to_buffer(const char *dest, FILE *out) {
         host = protocol_pos + 3;
     }
 
-    struct hostent *hent = gethostbyname(host);
-    if (!hent || !hent->h_addr_list[0]) {
-        printf("Can't resolve host: %s\n", host);
+    struct addrinfo hints, *res, *p;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_RAW;
+    hints.ai_protocol = IPPROTO_ICMP;
+
+    if (getaddrinfo(host, NULL, &hints, &res) != 0) {
+        fprintf(out, "Can't resolve host: %s\n", host);
         return;
     }
 
     TraceRouteContext ctx;
     memset(&ctx, 0, sizeof(ctx));
-    ctx.target.sin_family = AF_INET;
-    memcpy(&ctx.target.sin_addr, hent->h_addr_list[0], sizeof(struct in_addr));
-    ctx.ttl = 1;
+    for (p = res; p != NULL; p = p->ai_next) {
+        if (p->ai_family == AF_INET) {
+            ctx.is_ipv6 = 0;
+            memcpy(&ctx.target.v4, p->ai_addr, sizeof(ctx.target.v4));
+            break;
+        } else if (p->ai_family == AF_INET6) {
+            ctx.is_ipv6 = 1;
+            memcpy(&ctx.target.v6, p->ai_addr, sizeof(ctx.target.v6));
+            break;
+        }
+    }
 
-    if ((ctx.sockfd = create_icmp_socket()) < 0) return;
+    if (p == NULL) {
+        fprintf(out, "No valid address found for %s\n", host);
+        freeaddrinfo(res);
+        return;
+    }
+
+    freeaddrinfo(res);
+
+    ctx.ttl = 1;
+    if ((ctx.sockfd = create_icmp_socket(ctx.is_ipv6)) < 0) return;
 
     while (ctx.ttl <= TR_MAX_HOPS) {
         char hostname[NI_MAXHOST] = {0};
-        char ip[INET_ADDRSTRLEN] = {0};
-        int icmp_type = -1;  // 用于存储接收到的ICMP类型
-        
+        char ip[INET6_ADDRSTRLEN] = {0};
+        int icmp_type = -1;
+
         gettimeofday(&ctx.start_time, NULL);
-        
+
         if (send_probe(&ctx) < 0) break;
         icmp_type = recv_response(&ctx, hostname, ip);
-        
+
         struct timeval end_time;
         gettimeofday(&end_time, NULL);
         double elapsed = (end_time.tv_sec - ctx.start_time.tv_sec) * 1000.0;
         elapsed += (end_time.tv_usec - ctx.start_time.tv_usec) / 1000.0;
 
         if (icmp_type != -1) {
-            printf("%2d  %-15s  %-25s  %5.1f ms\n", ctx.ttl, ip,
+            fprintf(out, "%2d  %-15s  %-25s  %5.1f ms\n", ctx.ttl, ip,
                    (strcmp(hostname, "*") != 0) ? hostname : "", elapsed);
-            
-            // 通过ICMP类型判断是否到达目标
-            if (icmp_type == ICMP_ECHOREPLY) {
-                printf("Destination reached after %d hops\n", ctx.ttl);
+
+            if ((ctx.is_ipv6 && icmp_type == ICMP6_ECHO_REPLY) ||
+                (!ctx.is_ipv6 && icmp_type == ICMP_ECHOREPLY)) {
+                fprintf(out, "Destination reached after %d hops\n", ctx.ttl);
                 break;
             }
         } else {
-            printf("%2d  %-15s\n", ctx.ttl, "***");
+            fprintf(out, "%2d  %-15s\n", ctx.ttl, "***");
         }
-        
+
         ctx.ttl++;
     }
     close(ctx.sockfd);
 }
 
-// 修改主函数
 int main() {
     check_privileges();
     signal(SIGINT, handle_signal);
