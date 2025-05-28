@@ -93,6 +93,32 @@ static int recv_response(TraceRouteContext *ctx, char *host, char *ip);
 unsigned short in_cksum(unsigned short *addr, int len);
 void check_privileges();
 
+typedef struct {
+    const char *url;
+    double result;
+    int valid;
+    char route_info[2048];  // 存储traceroute结果
+} ThreadArg;
+
+// 修改线程函数
+void* thread_test_latency(void *arg) {
+    ThreadArg *targ = (ThreadArg *)arg;
+    
+    // 临时注释掉traceroute调用
+    /*
+    FILE *fp = fmemopen(targ->route_info, sizeof(targ->route_info), "w");
+    if (fp) {
+        trace_route_to_buffer(targ->url, fp);
+        fclose(fp);
+    }
+    */
+    
+    // 执行延迟测试
+    targ->result = test_url_latency(targ->url);
+    targ->valid = (targ->result >= 0) ? 1 : 0;
+    return NULL;
+}
+
 unsigned short in_cksum(unsigned short *addr, int len) {
     int nleft = len;
     int sum = 0;
@@ -389,7 +415,9 @@ static int recv_response(TraceRouteContext *ctx, char *host, char *ip) {
     int hlen;
 
     ssize_t len = recvfrom(ctx->sockfd, buf, sizeof(buf), 0,
-                         (struct sockaddr*)(ctx->is_ipv6 ? &from.v6 : &from.v4), &from_len);
+                         // 添加显式类型转换
+                         (struct sockaddr*)(ctx->is_ipv6 ? (void*)&from.v6 : (void*)&from.v4), 
+                         &from_len);
     if (len < 0) {
         if (errno != EAGAIN && errno != EWOULDBLOCK) {
             perror("recvfrom failed");
@@ -596,6 +624,54 @@ void trace_route_to_buffer(const char *dest, FILE *out) {
     close(ctx.sockfd);
 }
 
+// 在函数原型部分添加
+void get_public_ip(int ipv6);
+
+// 在已有的print_local_ip函数后添加新函数
+void get_public_ip(int ipv6) {
+    CURL *curl = curl_easy_init();
+    if (!curl) {
+        fprintf(stderr, "CURL init failed\n");
+        return;
+    }
+
+    const char *api_url = ipv6 ? 
+        "https://api64.ipify.org?format=json" : 
+        "https://api.ipify.org?format=json";
+
+    char ip[INET6_ADDRSTRLEN] = {0};
+    char buffer[256] = {0};
+    
+    curl_easy_setopt(curl, CURLOPT_URL, api_url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, buffer);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, TIMEOUT_SEC);
+    
+    CURLcode res = curl_easy_perform(curl);
+    if (res == CURLE_OK) {
+        // 简单解析JSON响应
+        char *start = strchr(buffer, '"');
+        if (start && (start = strchr(start+1, '"'))) {
+            char *end = strchr(start+1, '"');
+            if (end) {
+                *end = '\0';
+                strncpy(ip, start+1, sizeof(ip)-1);
+            }
+        }
+        
+        if (strlen(ip) > 0) {
+            printf("%s Public IP: %s\n", ipv6 ? "IPv6" : "IPv4", ip);
+        } else {
+            printf("Failed to get %s public IP\n", ipv6 ? "IPv6" : "IPv4");
+        }
+    } else {
+        fprintf(stderr, "IP query failed: %s\n", curl_easy_strerror(res));
+    }
+    
+    curl_easy_cleanup(curl);
+}
+
+// 修改main函数中的本地IP打印部分
 int main() {
     check_privileges();
     signal(SIGINT, handle_signal);
@@ -608,18 +684,40 @@ int main() {
     double cpu_usage = get_cpu_usage();
     double memory_usage = get_memory_usage();
     
+    printf("\n=== Network Latency Test ===\n");
+    
+    pthread_t threads[MAX_URLS];
+    ThreadArg args[MAX_URLS];
+    int thread_count = 0;
+
+    for (int i = 0; china_domains[i]; i++) {
+        // 注释掉原来的traceroute调用
+        // trace_route(china_domains[i]);
+        
+        args[thread_count].url = china_domains[i];
+        args[thread_count].valid = 0;
+        if (pthread_create(&threads[thread_count], NULL, 
+                         thread_test_latency, &args[thread_count]) != 0) {
+            fprintf(stderr, "Failed to create thread for %s\n", china_domains[i]);
+            continue;
+        }
+        thread_count++;
+    }
+
+    // 等待所有线程完成
+    for (int i = 0; i < thread_count; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    // 处理结果
     double total_latency = 0;
     int valid_tests = 0;
-    int total_tests = 0;
-    
-    printf("\n=== Network Latency Test ===\n");
-    for (int i = 0; china_domains[i]; i++) {
-        trace_route(china_domains[i]);
+    for (int i = 0; i < thread_count; i++) {
+        // 先打印该URL的traceroute结果
+        printf("\n%s", args[i].route_info);
         
-        total_tests++;
-        double latency = test_url_latency(china_domains[i]);
-        if (latency >= 0) {
-            total_latency += latency;
+        if (args[i].valid) {
+            total_latency += args[i].result;
             valid_tests++;
         }
     }
@@ -649,7 +747,8 @@ int main() {
     }
     
     if (avg_latency >= 0) {
-        printf("Avg Latency:      %5.1f ms (%d/%d)\n", avg_latency, valid_tests, total_tests);
+        // 修复这里：把total_tests改为thread_count
+        printf("Avg Latency:      %5.1f ms (%d/%d)\n", avg_latency, valid_tests, thread_count);
     } else {
         printf("Avg Latency:      N/A\n");
     }
