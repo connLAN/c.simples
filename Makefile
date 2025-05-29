@@ -2,12 +2,14 @@
 CC = gcc
 # Add -Wno-stringop-truncation if you want to suppress the strncpy warnings
 CFLAGS = -Wall -Wextra -O2 -std=c99 -D_GNU_SOURCE -Wno-unused-parameter
-LDFLAGS = -lpthread -lm  # Added -lm for math library
-CLIENT_LDFLAGS = -lcurl -lpthread -lm  # Added -lm here too
+LDFLAGS = -lpthread -lm -ljson-c # Added -ljson-c for json-c library
+CLIENT_LDFLAGS = -lcurl -lpthread -lm -ljson-c  # Added -ljson-c here too
 
 # Paths for sysinfo (adjust as needed)
 CURL_INCLUDE ?= /usr/include
 CURL_LIB ?= /usr/lib
+JSON_C_INCLUDE ?= /usr/include/json-c  # Added JSON_C_INCLUDE
+JSON_C_LIB ?= /usr/lib  # Added JSON_C_LIB
 
 # Targets
 SYSINFO_TARGET = sysinfo
@@ -28,7 +30,7 @@ all: $(SYSINFO_TARGET) $(HEARTBEAT_CLIENT) $(HEARTBEAT_SERVER)
 
 # Sysinfo build
 $(SYSINFO_TARGET): $(SYSINFO_SRC)
-	$(CC) $(CFLAGS) -I$(CURL_INCLUDE) -o $@ $< -L$(CURL_LIB) -lcurl -lm
+	$(CC) $(CFLAGS) -I$(CURL_INCLUDE) -I$(JSON_C_INCLUDE) -o $@ $< -L$(CURL_LIB) -L$(JSON_C_LIB) -lcurl -ljson-c -lm
 
 # Heartbeat client build
 $(HEARTBEAT_CLIENT): $(CLIENT_OBJS)
@@ -40,7 +42,7 @@ $(HEARTBEAT_SERVER): $(SERVER_OBJS)
 
 # Pattern rule for object files
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(CURL_INCLUDE) -I$(JSON_C_INCLUDE) -c $< -o $@
 
 # Cleanup
 clean:
