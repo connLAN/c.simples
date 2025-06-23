@@ -15,26 +15,8 @@ HeartbeatNode *heartbeat_history = NULL;
 pthread_mutex_t history_mutex = PTHREAD_MUTEX_INITIALIZER;
 int heartbeat_count = 0;
 
-// Clear heartbeat history (for testing)
-void clear_heartbeat_history(void) {
-    pthread_mutex_lock(&history_mutex);
-    
-    HeartbeatNode *current = heartbeat_history;
-    while (current != NULL) {
-        HeartbeatNode *next = current->next;
-        free(current);
-        current = next;
-    }
-    
-    heartbeat_history = NULL;
-    heartbeat_count = 0;
-    
-    pthread_mutex_unlock(&history_mutex);
-}
-
 // Validation functions
 bool validate_ip(const char *ip) {
-    if (ip == NULL) return false;
     struct sockaddr_in sa;
     return inet_pton(AF_INET, ip, &(sa.sin_addr)) != 0;
 }
@@ -90,8 +72,6 @@ bool parse_key_value(const char *pair, char *key, size_t key_len, char *value, s
 
 // Process JSON data
 bool process_json_data(const char *json_str, HeartbeatData *hb_data) {
-    if (json_str == NULL || hb_data == NULL) return false;
-    
     struct json_object *parsed_json;
     struct json_object *local_ip;
     struct json_object *public_ip;
@@ -415,13 +395,13 @@ void *run_tcp_server(void *arg) {
     
     // Create socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        perror("TCP socket creation failed");
+        perror("TCP socket failed");
         return NULL;
     }
     
     // Set socket options
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-        perror("TCP socket options configuration failed");
+        perror("TCP setsockopt");
         close(server_fd);
         return NULL;
     }
@@ -432,14 +412,14 @@ void *run_tcp_server(void *arg) {
     
     // Bind the socket to the port
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        perror("TCP server bind failed");
+        perror("TCP bind failed");
         close(server_fd);
         return NULL;
     }
     
     // Start listening
     if (listen(server_fd, MAX_CLIENTS) < 0) {
-        perror("TCP server listen failed");
+        perror("TCP listen");
         close(server_fd);
         return NULL;
     }
@@ -478,7 +458,6 @@ void *run_tcp_server(void *arg) {
 
 // Function to run HTTP server
 void *run_http_server(void *arg) {
-    (void)arg; // Mark unused parameter
     int server_fd;
     struct sockaddr_in address;
     int opt = 1;
@@ -486,13 +465,13 @@ void *run_http_server(void *arg) {
     
     // Create socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        perror("HTTP server socket creation failed");
+        perror("HTTP socket failed");
         return NULL;
     }
     
     // Set socket options
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-        perror("HTTP socket options configuration failed");
+        perror("HTTP setsockopt");
         close(server_fd);
         return NULL;
     }
@@ -503,14 +482,14 @@ void *run_http_server(void *arg) {
     
     // Bind the socket to the port
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        perror("HTTP server bind failed");
+        perror("HTTP bind failed");
         close(server_fd);
         return NULL;
     }
     
     // Start listening
     if (listen(server_fd, MAX_CLIENTS) < 0) {
-        perror("HTTP server listen failed");
+        perror("HTTP listen");
         close(server_fd);
         return NULL;
     }
@@ -525,7 +504,7 @@ void *run_http_server(void *arg) {
         }
         
         if ((*new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
-            perror("HTTP accept failed");
+            perror("HTTP accept");
             free(new_socket);
             continue;
         }
@@ -544,6 +523,29 @@ void *run_http_server(void *arg) {
         pthread_detach(thread_id);
     }
     
-    close(server_fd);
     return NULL;
+}
+
+int main() {
+    pthread_t http_thread, tcp_thread;
+    
+    // Start HTTP server thread
+    if (pthread_create(&http_thread, NULL, run_http_server, NULL) != 0) {
+        perror("Failed to create HTTP server thread");
+        exit(EXIT_FAILURE);
+    }
+    
+    // Start TCP server thread
+    if (pthread_create(&tcp_thread, NULL, run_tcp_server, NULL) != 0) {
+        perror("Failed to create TCP server thread");
+        exit(EXIT_FAILURE);
+    }
+    
+    printf("Server started with HTTP port %d and TCP port %d\n", HTTP_PORT, TCP_PORT);
+    
+    // Wait for server threads
+    pthread_join(http_thread, NULL);
+    pthread_join(tcp_thread, NULL);
+    
+    return 0;
 }

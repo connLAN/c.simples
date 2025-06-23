@@ -17,6 +17,10 @@
 #include <sys/statvfs.h> // For statvfs
 #include <netinet/in.h>   // For NI_MAXHOST and in_addr
 #include <errno.h>        // For gai_strerror
+#include <sys/utsname.h>  // For uname
+#include <sys/sysinfo.h>  // For sysinfo
+
+#include "sysinfo.h"      // Include sysinfo header
 
 #define INTERVAL 10 // 发送间隔时间（秒）
 // Update this line to match your server's real address
@@ -206,7 +210,46 @@ double calculate_latency(const char* server_url) {
     return latency;
 }
 
+#define SERVER_PORT 8080
+#define SERVER_IP "127.0.0.1"
+
+// Function to send heartbeat data over socket
+void send_heartbeat(int sockfd, const char *data) {
+    if (send(sockfd, data, strlen(data), 0) < 0) {
+        perror("send failed");
+        exit(EXIT_FAILURE);
+    }
+    printf("Sent heartbeat data successfully\n");
+}
+
 int main() {
+    int sockfd;
+    struct sockaddr_in server_addr;
+
+    // Create socket
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Configure server address
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_PORT);
+    
+    if (inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr) <= 0) {
+        perror("invalid address");
+        exit(EXIT_FAILURE);
+    }
+
+    // Connect to server
+    if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        perror("connection failed");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Connected to server at %s:%d\n", SERVER_IP, SERVER_PORT);
+
     while (1) {
         char local_ip[INET_ADDRSTRLEN], public_ip[INET_ADDRSTRLEN];
         memset(local_ip, 0, INET_ADDRSTRLEN);
@@ -218,55 +261,49 @@ int main() {
         double cpu_usage = get_cpu_usage();
         double memory_usage = get_memory_usage();
         double disk_usage = get_disk_usage("/");
-        double latency = calculate_latency(SERVER_URL);
 
-        double availability = 100 - ((cpu_usage + memory_usage + disk_usage) / 3);
-
-        printf("Local IP: %s\n", local_ip);
-        printf("Public IP: %s\n", public_ip);
-        printf("CPU Usage: %.2f%%\n", cpu_usage);
-        printf("Memory Usage: %.2f%%\n", memory_usage);
-        printf("Disk Usage: %.2f%%\n", disk_usage);
-        printf("Availability: %.2f%%\n", availability);
-        printf("Latency: %.2f ms\n", latency * 1000);
-
-        // 构建POST数据
-        char post_data[512];
-        snprintf(post_data, sizeof(post_data),
-                 "local_ip=%s&public_ip=%s&cpu_usage=%.2f&memory_usage=%.2f&disk_usage=%.2f&availability=%.2f&latency=%.2f",
-                 local_ip, public_ip, cpu_usage, memory_usage, disk_usage, availability, latency * 1000);
-
-        // 发送POST请求
-        CURL *curl;
-        CURLcode res;
-        struct curl_slist *headers = NULL;
-        headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
-        headers = curl_slist_append(headers, "Connection: close");  // Add this header
-    
-        curl_global_init(CURL_GLOBAL_ALL);
-        curl = curl_easy_init();
-        if(curl) {
-            // Add verbose mode for debugging
-            curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-            curl_easy_setopt(curl, CURLOPT_URL, SERVER_URL);
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);  // Add headers
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
-            // Add timeout settings
-            curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 2L); 
-            curl_easy_setopt(curl, CURLOPT_TIMEOUT, 4L);
-            
-            res = curl_easy_perform(curl);
-            if(res != CURLE_OK)
-                fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                        curl_easy_strerror(res));
-    
-            curl_slist_free_all(headers);  // Cleanup headers
+        // Get system information using sysinfo
+        struct utsname system_info;
+        if (uname(&system_info) != 0) {
+            perror("uname failed");
+            exit(EXIT_FAILURE);
         }
-    
-        curl_global_cleanup();
 
+        // Format heartbeat data as JSON
+        char heartbeat_data[1024];
+        snprintf(heartbeat_data, sizeof(heartbeat_data),
+                "{"
+                "\"timestamp\":\"%ld\","
+                "\"hostname\":\"%s\","
+                "\"os\":\"%s %s\","
+                "\"kernel\":\"%s\","
+                "\"arch\":\"%s\","
+                "\"local_ip\":\"%s\","
+                "\"public_ip\":\"%s\","
+                "\"cpu_usage\":%.2f,"
+                "\"memory_usage\":%.2f,"
+                "\"disk_usage\":%.2f"
+                "}",
+                time(NULL),
+                system_info.nodename,
+                system_info.sysname, system_info.release,
+                system_info.version,
+                system_info.machine,
+                local_ip,
+                public_ip,
+                cpu_usage,
+                memory_usage,
+                disk_usage
+        );
+
+        // Send heartbeat data
+        send_heartbeat(sockfd, heartbeat_data);
+        
+        // Wait for the next interval
         sleep(INTERVAL);
     }
 
+    // Close socket (this part is never reached in this example)
+    close(sockfd);
     return 0;
 }
