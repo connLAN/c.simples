@@ -5,9 +5,313 @@
 #include <signal.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <pthread.h>
 #include <netinet/in.h>
+#include <time.h>
+#include <sys/time.h>
+#include <pthread.h>
+#include <string.h>
+#include <stdlib.h>
+#include "ipfilter.h"
+
+// Function declarations
+void handle_client(int client_socket, const char* client_ip);
 #include "utils.h"
 #include "log.h"
+#include <cjson/cJSON.h>
+
+// IP tracking structures
+typedef struct {
+    char ip[INET_ADDRSTRLEN];
+    time_t first_seen;
+    time_t last_seen;
+    int total_connections;
+    int blacklisted_connections;
+    int non_whitelisted_connections;
+    time_t daily_connections[24]; // Last 24 hours
+    time_t weekly_connections[7];  // Last 7 days
+    time_t monthly_connections[30]; // Last 30 days
+} IPStats;
+
+typedef struct {
+    IPStats* stats;
+    size_t count;
+    size_t capacity;
+    pthread_mutex_t mutex;
+    int blacklisted_connections;
+    int non_whitelisted_connections;
+} IPTracker;
+
+// Global tracker
+static IPTracker ip_tracker = {
+    .stats = NULL,
+    .count = 0,
+    .capacity = 0,
+    .mutex = PTHREAD_MUTEX_INITIALIZER,
+    .blacklisted_connections = 0,
+    .non_whitelisted_connections = 0
+};
+
+// Initialize IP lists
+void init_ip_lists() {
+    pthread_mutex_lock(&ip_lists_mutex);
+    
+    // Initialize with some default IPs
+    blacklisted_ips = malloc(2 * sizeof(char*));
+    blacklisted_ips[0] = strdup("192.168.1.100");
+    blacklisted_ips[1] = NULL;
+    blacklist_count = 1;
+    
+    whitelisted_ips = malloc(2 * sizeof(char*));
+    whitelisted_ips[0] = strdup("192.168.1.200");
+    whitelisted_ips[1] = NULL;
+    whitelist_count = 1;
+    
+    pthread_mutex_unlock(&ip_lists_mutex);
+}
+
+// Check if IP is blacklisted
+int is_ip_blacklisted(const char *ip) {
+    pthread_mutex_lock(&ip_lists_mutex);
+    
+    if (!blacklisted_ips) {
+        pthread_mutex_unlock(&ip_lists_mutex);
+        return 0;
+    }
+    
+    for (size_t i = 0; blacklisted_ips[i] != NULL; i++) {
+        if (strcmp(blacklisted_ips[i], ip) == 0) {
+            pthread_mutex_unlock(&ip_lists_mutex);
+            return 1;
+        }
+    }
+    
+    pthread_mutex_unlock(&ip_lists_mutex);
+    return 0;
+}
+
+// Check if IP is whitelisted
+int is_ip_whitelisted(const char *ip) {
+    pthread_mutex_lock(&ip_lists_mutex);
+    
+    if (!whitelisted_ips) {
+        pthread_mutex_unlock(&ip_lists_mutex);
+        return 0;
+    }
+    
+    for (size_t i = 0; whitelisted_ips[i] != NULL; i++) {
+        if (strcmp(whitelisted_ips[i], ip) == 0) {
+            pthread_mutex_unlock(&ip_lists_mutex);
+            return 1;
+        }
+    }
+    
+    pthread_mutex_unlock(&ip_lists_mutex);
+    return 0;
+}
+
+// Get current time in Shanghai timezone (UTC+8)
+static time_t get_shanghai_time() {
+    time_t now;
+    time(&now);
+    return now + 8 * 3600; // Add 8 hours for CST
+}
+
+// Initialize IP tracker
+static void init_ip_tracker() {
+    ip_tracker.capacity = 100;
+    ip_tracker.stats = calloc(ip_tracker.capacity, sizeof(IPStats));
+    if (!ip_tracker.stats) {
+        LOG_ERROR("Failed to allocate memory for IP tracker");
+        exit(EXIT_FAILURE);
+    }
+    pthread_mutex_init(&ip_tracker.mutex, NULL);
+}
+
+// Find or create IP stats entry
+static IPStats* find_or_create_stats(const char* ip) {
+    // First try to find existing entry
+    for (size_t i = 0; i < ip_tracker.count; i++) {
+        if (strcmp(ip_tracker.stats[i].ip, ip) == 0) {
+            return &ip_tracker.stats[i];
+        }
+    }
+
+    // If not found, create new entry
+    if (ip_tracker.count >= ip_tracker.capacity) {
+        // Double capacity if needed
+        size_t new_capacity = ip_tracker.capacity * 2;
+        IPStats* new_stats = realloc(ip_tracker.stats, new_capacity * sizeof(IPStats));
+        if (!new_stats) {
+            LOG_ERROR("Failed to reallocate memory for IP tracker");
+            return NULL;
+        }
+        ip_tracker.stats = new_stats;
+        ip_tracker.capacity = new_capacity;
+    }
+
+    IPStats* new_entry = &ip_tracker.stats[ip_tracker.count++];
+    strncpy(new_entry->ip, ip, INET_ADDRSTRLEN);
+    new_entry->first_seen = get_shanghai_time();
+    new_entry->last_seen = new_entry->first_seen;
+    new_entry->total_connections = 0;
+    memset(new_entry->daily_connections, 0, sizeof(new_entry->daily_connections));
+    memset(new_entry->weekly_connections, 0, sizeof(new_entry->weekly_connections));
+    memset(new_entry->monthly_connections, 0, sizeof(new_entry->monthly_connections));
+
+    return new_entry;
+}
+
+// Update time-based buckets for an IP
+static void update_time_buckets(IPStats* stats, time_t now) {
+    // Update daily bucket (current hour)
+    int current_hour = (now / 3600) % 24;
+    stats->daily_connections[current_hour] = now;
+
+    // Update weekly bucket (current day of week)
+    int current_day = (now / 86400) % 7;
+    stats->weekly_connections[current_day] = now;
+
+    // Update monthly bucket (current day of month)
+    int current_month_day = (now / 86400) % 30;
+    stats->monthly_connections[current_month_day] = now;
+}
+
+// Calculate active connections in time period
+static int count_active_connections(const time_t* connections, size_t size, time_t now, time_t period) {
+    int count = 0;
+    for (size_t i = 0; i < size; i++) {
+        if (connections[i] > 0 && (now - connections[i]) <= period) {
+            count++;
+        }
+    }
+    return count;
+}
+
+// Serialize IP stats to JSON string
+static char* ip_stats_to_json(const IPStats* stats) {
+    cJSON *root = cJSON_CreateObject();
+    if (!root) return NULL;
+
+    time_t now = get_shanghai_time();
+    
+    cJSON_AddStringToObject(root, "ip", stats->ip);
+    cJSON_AddStringToObject(root, "first_seen", ctime(&stats->first_seen));
+    cJSON_AddStringToObject(root, "last_seen", ctime(&stats->last_seen));
+    cJSON_AddNumberToObject(root, "total_connections", stats->total_connections);
+    cJSON_AddNumberToObject(root, "daily_connections", 
+        count_active_connections(stats->daily_connections, 24, now, 86400));
+    cJSON_AddNumberToObject(root, "weekly_connections", 
+        count_active_connections(stats->weekly_connections, 7, now, 604800));
+    cJSON_AddNumberToObject(root, "monthly_connections", 
+        count_active_connections(stats->monthly_connections, 30, now, 2592000));
+
+    char *json = cJSON_Print(root);
+    cJSON_Delete(root);
+    return json;
+}
+
+// Save all IP stats to file
+static void save_ip_stats(const char* filename) {
+    cJSON *root = cJSON_CreateArray();
+    if (!root) return;
+
+    for (size_t i = 0; i < ip_tracker.count; i++) {
+        char *stats_json = ip_stats_to_json(&ip_tracker.stats[i]);
+        if (stats_json) {
+            cJSON *item = cJSON_Parse(stats_json);
+            if (item) {
+                cJSON_AddItemToArray(root, item);
+            }
+            free(stats_json);
+        }
+    }
+
+    char *json = cJSON_Print(root);
+    cJSON_Delete(root);
+
+    if (json) {
+        FILE *fp = fopen(filename, "w");
+        if (fp) {
+            fputs(json, fp);
+            fclose(fp);
+            LOG_INFO("Saved IP stats to %s", filename);
+        }
+        free(json);
+    }
+}
+
+// Signal handler for graceful shutdown
+static volatile sig_atomic_t shutdown_requested = 0;
+static volatile sig_atomic_t status_requested = 0;
+
+void handle_signal(int sig) {
+    if (sig == SIGINT || sig == SIGTERM) {
+        shutdown_requested = 1;
+    } else if (sig == SIGUSR1) {
+        status_requested = 1;
+    }
+}
+
+// Cleanup IP tracker resources
+static void cleanup_ip_tracker() {
+    if (ip_tracker.stats) {
+        pthread_mutex_destroy(&ip_tracker.mutex);
+        free(ip_tracker.stats);
+        ip_tracker.stats = NULL;
+    }
+    ip_tracker.count = 0;
+    ip_tracker.capacity = 0;
+}
+
+// Check if we should save stats (every 100 connections)
+static void check_periodic_save() {
+    static int connection_count = 0;
+    connection_count++;
+    
+    if (connection_count >= 100) {
+        save_ip_stats("ip_stats.json");
+        connection_count = 0;
+    }
+}
+
+// Display current connection stats
+void display_current_stats() {
+    time_t now = get_shanghai_time();
+    printf("\nCurrent IP Connection Statistics:\n");
+    printf("================================\n");
+    printf("%-20s %-25s %-25s %-8s %-8s %-8s\n", 
+           "IP Address", "First Seen", "Last Seen", "Total", "24h", "7d");
+    printf("--------------------------------------------------------------------------------\n");
+    
+    for (size_t i = 0; i < ip_tracker.count; i++) {
+        IPStats* stats = &ip_tracker.stats[i];
+        char first_seen_str[26], last_seen_str[26];
+        strncpy(first_seen_str, ctime(&stats->first_seen), 25);
+        strncpy(last_seen_str, ctime(&stats->last_seen), 25);
+        first_seen_str[24] = last_seen_str[24] = '\0'; // Remove newline
+        
+        printf("%-20s %-25s %-25s %-8d %-8d %-8d\n", 
+               stats->ip,
+               first_seen_str,
+               last_seen_str,
+               stats->total_connections,
+               count_active_connections(stats->daily_connections, 24, now, 86400),
+               count_active_connections(stats->weekly_connections, 7, now, 604800));
+    }
+    printf("\n");
+}
+
+// Handle status command
+void handle_status_command() {
+    display_current_stats();
+    printf("IP Filtering Status:\n");
+    printf("Blacklisted IPs: %zu\n", blacklist_count);
+    printf("Whitelisted IPs: %zu\n", whitelist_count);
+    printf("Blocked blacklisted connections: %d\n", ip_tracker.blacklisted_connections);
+    printf("Blocked non-whitelisted connections: %d\n", ip_tracker.non_whitelisted_connections);
+    printf("\nUse 'kill -SIGHUP %d' to reload IP lists\n", getpid());
+}
 
 volatile sig_atomic_t reload_requested = 0;
 
@@ -23,13 +327,38 @@ void handle_sighup(int sig) {
 int is_ip_blacklisted(const char *ip);
 int is_ip_whitelisted(const char *ip);
 
-void handle_client(int client_socket) {
+void handle_client(int client_socket, const char* client_ip) {
+    // Track the connection
+    IPStats* stats = find_or_create_stats(client_ip);
+    if (stats) {
+        time_t now = get_shanghai_time();
+        stats->last_seen = now;
+        stats->total_connections++;
+        update_time_buckets(stats, now);
+    }
+
     char buffer[BUFFER_SIZE] = {0};
-    read(client_socket, buffer, BUFFER_SIZE);
-    printf("Received: %s\n", buffer);
+    ssize_t bytes_read = read(client_socket, buffer, BUFFER_SIZE - 1);
+    if (bytes_read <= 0) {
+        LOG_ERROR("Failed to read from client %s", client_ip);
+        close(client_socket);
+        return;
+    }
+    buffer[bytes_read] = '\0';
     
-    const char *response = "Message received by server";
-    send(client_socket, response, strlen(response), 0);
+    printf("Received from %s: %s\n", client_ip, buffer);
+    
+    // Handle test message specifically
+    if (strcmp(buffer, "TEST\n") == 0) {
+        const char *response = "SERVER_OK\n";
+        ssize_t sent = send(client_socket, response, strlen(response), 0);
+        printf("Sent %zd bytes: %s", sent, response);
+    } else {
+        const char *response = "Message received by server\n";
+        ssize_t sent = send(client_socket, response, strlen(response), 0);
+        printf("Sent %zd bytes: %s", sent, response);
+    }
+    
     close(client_socket);
 }
 
@@ -38,8 +367,23 @@ int main() {
     log_set_level(LOG_INFO);
     LOG_INFO("Starting server");
     
+    // Initialize IP tracker
+    init_ip_tracker();
+    
     // Initialize IP lists
     init_ip_lists();
+
+    // Set up signal handlers
+    signal(SIGINT, handle_signal);
+    
+    // Initialize IP lists
+    init_ip_lists();
+    if (blacklisted_ips == NULL || whitelisted_ips == NULL) {
+        fprintf(stderr, "Failed to initialize IP lists\n");
+        return EXIT_FAILURE;
+    }
+    signal(SIGTERM, handle_signal);
+    signal(SIGUSR1, handle_signal);
     
     // Setup SIGHUP handler for dynamic reload
     struct sigaction sa;
@@ -84,9 +428,20 @@ int main() {
     
     printf("Server listening on port %d\n", PORT);
     
-    while (1) {
+    while (!shutdown_requested) {
+        // Check for status display request
+        if (status_requested) {
+            pthread_mutex_lock(&ip_tracker.mutex);
+            handle_status_command();
+            pthread_mutex_unlock(&ip_tracker.mutex);
+            status_requested = 0;
+        }
+
         // Accept new connection
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
+            if (shutdown_requested) {
+                break; // Exit on shutdown
+            }
             perror("accept");
             continue;
         }
@@ -96,16 +451,38 @@ int main() {
         
         printf("Connection from %s\n", client_ip);
         
-        // Check IP against blacklist/whitelist
+        // Check IP against blacklist
         if (is_ip_blacklisted(client_ip)) {
-        printf("Debug: IP %s is blacklisted\n", client_ip);
+            printf("Debug: IP %s is blacklisted\n", client_ip);
             printf("Blocked connection from blacklisted IP: %s\n", client_ip);
+            pthread_mutex_lock(&ip_tracker.mutex);
+            ip_tracker.blacklisted_connections++;
+            pthread_mutex_unlock(&ip_tracker.mutex);
             close(new_socket);
             continue;
         }
         
-        handle_client(new_socket);
+        // Check IP against whitelist if whitelist is not empty
+        if (whitelist_count > 0 && !is_ip_whitelisted(client_ip)) {
+            printf("Debug: IP %s is not whitelisted\n", client_ip);
+            printf("Blocked connection from non-whitelisted IP: %s\n", client_ip);
+            pthread_mutex_lock(&ip_tracker.mutex);
+            ip_tracker.non_whitelisted_connections++;
+            pthread_mutex_unlock(&ip_tracker.mutex);
+            close(new_socket);
+            continue;
+        }
+        
+        handle_client(new_socket, client_ip);
+        
+        // Check if we should save stats periodically
+        check_periodic_save();
     }
-    
+
+    // Cleanup on shutdown
+    LOG_INFO("Shutting down server...");
+    save_ip_stats("ip_stats.json");
+    cleanup_ip_tracker();
+    close(server_fd);
     return 0;
 }

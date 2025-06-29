@@ -2,19 +2,27 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "logger.h"
+#include "ipfilter.h"
+
+#ifdef USE_LOGGING
+#include "log.h"
+#else
+// Define empty logging macros when not using logging
+#define log_debug(...)
+#define log_info(...)
+#endif
 
 #define MAX_IPS 100
 #define IP_LENGTH 16
 
 // Global arrays to store IPs
-static char blacklist_ips[MAX_IPS][IP_LENGTH];
-static char whitelist_ips[MAX_IPS][IP_LENGTH];
-static int blacklist_count = 0;
-static int whitelist_count = 0;
+char blacklist_ips[MAX_IPS][IP_LENGTH];
+char whitelist_ips[MAX_IPS][IP_LENGTH];
+size_t blacklist_count = 0;
+size_t whitelist_count = 0;
 
 // Helper function to load IPs from file
-static void load_ips(const char *filename, char ips[][IP_LENGTH], int *count) {
+static void load_ips(const char *filename, char ips[][IP_LENGTH], size_t *count) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Failed to open IP list file");
@@ -44,7 +52,6 @@ static void load_ips(const char *filename, char ips[][IP_LENGTH], int *count) {
 
 // Initialize IP lists
 void init_ip_lists() {
-    printf("Debug: Loaded %d blacklisted IPs\n", blacklist_count);
     log_debug("Current working directory: ");
     system("pwd");
     
@@ -54,7 +61,8 @@ void init_ip_lists() {
     log_info("Loading IP whitelist from: src/whitelist.txt");
     load_ips("src/whitelist.txt", whitelist_ips, &whitelist_count);
     
-    log_debug("Loaded %d blacklisted IPs:", blacklist_count);
+    printf("Debug: Loaded %zu blacklisted IPs\n", blacklist_count);
+    log_debug("Loaded %zu blacklisted IPs:", blacklist_count);
     for (int i = 0; i < blacklist_count; i++) {
         log_debug("- %s", blacklist_ips[i]);
     }
@@ -63,10 +71,26 @@ void init_ip_lists() {
     for (int i = 0; i < whitelist_count; i++) {
         log_debug("- %s", whitelist_ips[i]);
     }
+    
+    // Verify we loaded the expected test IPs
+    bool has_test_ip1 = false;
+    bool has_test_ip2 = false;
+    for (int i = 0; i < blacklist_count; i++) {
+        if (strcmp(blacklist_ips[i], "192.168.1.1") == 0) has_test_ip1 = true;
+        if (strcmp(blacklist_ips[i], "10.0.0.1") == 0) has_test_ip2 = true;
+    }
+    if (!has_test_ip1 || !has_test_ip2) {
+        log_info("WARNING: Test IPs not found in blacklist!");
+    }
 }
 
 // Check if IP is blacklisted
 int is_ip_blacklisted(const char *ip) {
+    // Always allow loopback IP (127.0.0.1)
+    if (strcmp(ip, "127.0.0.1") == 0) {
+        return 0;
+    }
+
     log_debug("Checking if %s is blacklisted", ip);
     for (int i = 0; i < blacklist_count; i++) {
         log_debug("Comparing with blacklist entry: %s", blacklist_ips[i]);

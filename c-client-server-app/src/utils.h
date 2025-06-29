@@ -1,6 +1,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+extern size_t blacklist_count;
+extern size_t whitelist_count;
+
 // Initialize IP lists (call this once at program start)
 void init_ip_lists();
 
