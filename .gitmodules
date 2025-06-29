@@ -1,0 +1,3 @@
+[submodule "c-client-server-app/tests/Unity/Unity"]
+	path = c-client-server-app/tests/Unity/Unity
+	url = https://github.com/throwtheswitch/unity

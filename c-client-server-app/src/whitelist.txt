@@ -1,0 +1,2 @@
+# IP addresses to allow (one per line)
+10.0.0.1
