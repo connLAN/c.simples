@@ -17,7 +17,7 @@ SERVER_CFLAGS += $(CJSON_CFLAGS)
 
 all: $(EXEC_CLIENT) $(EXEC_SERVER) $(LIB_NAME).a $(LIB_NAME).so
 
-$(EXEC_CLIENT): src/client.o src/utils.o
+$(EXEC_CLIENT): src/client.o src/utils.o src/log.o
 	$(CC) $(CLIENT_CFLAGS) -o $@ $^
 
 $(EXEC_SERVER): src/server.o src/utils.o src/log.o

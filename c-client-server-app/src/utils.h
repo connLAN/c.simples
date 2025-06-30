@@ -7,6 +7,9 @@ extern size_t whitelist_count;
 // Initialize IP lists (call this once at program start)
 void init_ip_lists();
 
+// Cleanup IP lists (called automatically at exit)
+void cleanup_ip_lists();
+
 // Check if IP is blacklisted
 int is_ip_blacklisted(const char *ip);
 
