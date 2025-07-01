@@ -7,16 +7,23 @@ DEBUG_FLAGS = -g -DDEBUG
 
 # 目标可执行文件
 TARGET = net_analyzer
+TEST_TARGET = test_analyzer
 
 # 源文件和对象文件
 SRCS = main.c net_traffic_analyzer.c
 OBJS = $(SRCS:.c=.o)
+TEST_SRCS = test_analyzer.c net_traffic_analyzer.c
+TEST_OBJS = $(TEST_SRCS:.c=.o)
 
 # 默认目标
 all: $(TARGET)
 
 # 编译可执行文件
 $(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^
+
+# 编译测试程序
+$(TEST_TARGET): $(TEST_OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 
 # 编译源文件为对象文件的规则
@@ -27,9 +34,13 @@ $(TARGET): $(OBJS)
 debug: CFLAGS = -Wall -Wextra -g -DDEBUG
 debug: clean all
 
+# 测试目标
+test: $(TEST_TARGET)
+	./$(TEST_TARGET)
+
 # 清理生成的文件
 clean:
-	rm -f $(TARGET) $(OBJS) *.csv
+	rm -f $(TARGET) $(TEST_TARGET) $(OBJS) $(TEST_OBJS) *.csv
 
 # 安装
 install: $(TARGET)
@@ -46,11 +57,11 @@ run: $(TARGET)
 	./$(TARGET)
 
 # 生成依赖关系
-depend: $(SRCS)
+depend: $(SRCS) $(TEST_SRCS)
 	$(CC) -MM $(CFLAGS) $^ > .depend
 
 # 包含生成的依赖文件
 -include .depend
 
 # 伪目标声明
-.PHONY: all debug clean install uninstall run depend
+.PHONY: all debug clean install uninstall run depend test
