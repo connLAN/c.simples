@@ -1,0 +1,8 @@
+[2025-07-05 20:49:03] [INFO] [common/logger.c:86] [logger_init] Logger initialized
+[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:252] [main] Worker server starting...
+[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:49] [connect_to_server] Connecting to central server at 127.0.0.1:8888 (attempt 1/5)
+[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:54] [connect_to_server] Connected to central server
+[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:74] [register_with_server] Registering with central server
+[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:94] [register_with_server] Registered with central server, assigned worker ID: 1
+[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:282] [main] Worker server running, waiting for tasks...
+[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:203] [heartbeat_thread] Heartbeat thread started

@@ -1,0 +1,95 @@
+[2025-07-05 20:43:40] [INFO] [common/logger.c:86] [logger_init] Logger initialized
+[2025-07-05 20:43:40] [INFO] [central_server/central_server.c:53] [initialize_server] Central server starting...
+[2025-07-05 20:43:40] [INFO] [central_server/central_server.c:79] [initialize_server] Server socket created on port 8888
+[2025-07-05 20:43:40] [INFO] [central_server/central_server.c:363] [create_sample_task] Created sample task with ID 1
+[2025-07-05 20:43:40] [INFO] [central_server/central_server.c:322] [timeout_checker_thread] Timeout checker thread started
+[2025-07-05 20:43:40] [INFO] [central_server/central_server.c:393] [main] Central server running on port 8888
+[2025-07-05 20:43:51] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:43070
+[2025-07-05 20:43:51] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:43:51] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:43080
+[2025-07-05 20:43:51] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:43:51] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:43:51] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:43092
+[2025-07-05 20:43:51] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:43:52] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:43:52] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:43:52] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:59332
+[2025-07-05 20:43:52] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:43:52] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:43:52] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:59336
+[2025-07-05 20:43:52] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:43:54] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:43:54] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:59344
+[2025-07-05 20:43:54] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:43:54] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:43:59] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:59354
+[2025-07-05 20:43:59] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:43:59] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:43:59] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:59358
+[2025-07-05 20:43:59] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:43:59] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:59362
+[2025-07-05 20:43:59] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:44:08] [INFO] [common/logger.c:86] [logger_init] Logger initialized
+[2025-07-05 20:44:08] [INFO] [central_server/central_server.c:53] [initialize_server] Central server starting...
+[2025-07-05 20:44:08] [ERROR] [common/net_utils.c:47] [create_server_socket] Failed to bind socket: Address already in use
+[2025-07-05 20:44:08] [ERROR] [central_server/central_server.c:73] [initialize_server] Failed to create server socket
+[2025-07-05 20:44:30] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:44:30] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:44:30] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:43858
+[2025-07-05 20:44:30] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:44:30] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:44:30] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:43870
+[2025-07-05 20:44:30] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:45:31] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:45:31] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:54264
+[2025-07-05 20:45:31] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:45:31] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:47:58] [INFO] [common/logger.c:86] [logger_init] Logger initialized
+[2025-07-05 20:47:58] [INFO] [central_server/central_server.c:53] [initialize_server] Central server starting...
+[2025-07-05 20:47:58] [ERROR] [common/net_utils.c:47] [create_server_socket] Failed to bind socket: Address already in use
+[2025-07-05 20:47:58] [ERROR] [central_server/central_server.c:73] [initialize_server] Failed to create server socket
+[2025-07-05 20:48:23] [INFO] [central_server/central_server.c:347] [signal_handler] Received signal 15, shutting down...
+[2025-07-05 20:48:23] [INFO] [central_server/central_server.c:90] [cleanup_server] Shutting down central server...
+[2025-07-05 20:48:29] [INFO] [common/logger.c:86] [logger_init] Logger initialized
+[2025-07-05 20:48:29] [INFO] [central_server/central_server.c:53] [initialize_server] Central server starting...
+[2025-07-05 20:48:29] [INFO] [central_server/central_server.c:79] [initialize_server] Server socket created on port 8888
+[2025-07-05 20:48:29] [INFO] [central_server/central_server.c:363] [create_sample_task] Created sample task with ID 1
+[2025-07-05 20:48:29] [INFO] [central_server/central_server.c:322] [timeout_checker_thread] Timeout checker thread started
+[2025-07-05 20:48:29] [INFO] [central_server/central_server.c:393] [main] Central server running on port 8888
+[2025-07-05 20:49:03] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:53414
+[2025-07-05 20:49:03] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:49:03] [INFO] [central_server/central_server.c:125] [handle_worker_registration] Worker 1 registered
+[2025-07-05 20:49:35] [WARNING] [central_server/central_server.c:331] [timeout_checker_thread] 1 workers timed out
+[2025-07-05 20:50:33] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:34406
+[2025-07-05 20:50:33] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:50:33] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 20:50:33] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:34408
+[2025-07-05 20:50:33] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:50:33] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:34422
+[2025-07-05 20:50:33] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 20:57:42] [ERROR] [common/net_utils.c:197] [recv_header] Failed to receive message header: Resource temporarily unavailable
+[2025-07-05 20:57:42] [ERROR] [central_server/central_server.c:248] [worker_handler_thread] Failed to receive registration from worker
+[2025-07-05 20:57:42] [ERROR] [common/net_utils.c:197] [recv_header] Failed to receive message header: Resource temporarily unavailable
+[2025-07-05 20:57:42] [ERROR] [central_server/central_server.c:248] [worker_handler_thread] Failed to receive registration from worker
+[2025-07-05 21:00:33] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:33994
+[2025-07-05 21:00:33] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 21:00:33] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 21:00:33] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:34010
+[2025-07-05 21:00:33] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 21:00:33] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:34014
+[2025-07-05 21:00:33] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 21:04:29] [ERROR] [common/net_utils.c:197] [recv_header] Failed to receive message header: Resource temporarily unavailable
+[2025-07-05 21:04:29] [ERROR] [central_server/central_server.c:248] [worker_handler_thread] Failed to receive registration from worker
+[2025-07-05 21:04:29] [ERROR] [common/net_utils.c:197] [recv_header] Failed to receive message header: Resource temporarily unavailable
+[2025-07-05 21:04:29] [ERROR] [central_server/central_server.c:248] [worker_handler_thread] Failed to receive registration from worker
+[2025-07-05 21:53:59] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:41776
+[2025-07-05 21:53:59] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 21:53:59] [ERROR] [central_server/central_server.c:254] [worker_handler_thread] Expected registration message, got type 71
+[2025-07-05 21:53:59] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:41782
+[2025-07-05 21:53:59] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 21:53:59] [INFO] [central_server/central_server.c:408] [main] New connection from 127.0.0.1:41798
+[2025-07-05 21:53:59] [INFO] [central_server/central_server.c:244] [worker_handler_thread] New worker connection handler started
+[2025-07-05 22:04:30] [ERROR] [common/net_utils.c:197] [recv_header] Failed to receive message header: Resource temporarily unavailable
+[2025-07-05 22:04:30] [ERROR] [central_server/central_server.c:248] [worker_handler_thread] Failed to receive registration from worker
+[2025-07-05 22:04:30] [ERROR] [common/net_utils.c:197] [recv_header] Failed to receive message header: Resource temporarily unavailable
+[2025-07-05 22:04:30] [ERROR] [central_server/central_server.c:248] [worker_handler_thread] Failed to receive registration from worker
