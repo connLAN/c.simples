@@ -125,7 +125,11 @@ uint32_t handle_worker_registration(int sockfd, pthread_t thread_id) {
     LOG_INFO("Worker %u registered", worker_id);
     
     /* Send registration response */
-    if (send_message(sockfd, MSG_TYPE_REGISTER_RESPONSE, worker_id, NULL, 0) < 0) {
+    Message msg = {
+        .header = {MSG_TYPE_REGISTER_RESPONSE, worker_id},
+        .body.reg_response = {.status = 1}
+    };
+    if (send_message(sockfd, &msg) < 0) {
         LOG_ERROR("Failed to send registration response to worker %u", worker_id);
         worker_registry_remove(worker_registry, worker_id);
         return 0;

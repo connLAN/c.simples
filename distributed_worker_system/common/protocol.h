@@ -1,96 +1,87 @@
-/**
- * @file protocol.h
- * @brief Protocol definitions for distributed worker system
- */
-
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
 
-#include <stddef.h>
 #include <stdint.h>
+#include <time.h>
+#include <unistd.h>
 
-/* Maximum size for job data */
-#define MAX_JOB_DATA_SIZE 4096
-
-/* Maximum number of jobs in a list */
-#define MAX_JOBS_IN_LIST 100
-
-/* Message types */
-#define MSG_SUBMIT_JOB       1  /* Client submits a job */
-#define MSG_JOB_ACCEPTED     2  /* Server accepts a job */
-#define MSG_GET_JOB_STATUS   3  /* Client requests job status */
-#define MSG_JOB_STATUS       4  /* Server responds with job status */
-#define MSG_GET_JOB_RESULT   5  /* Client requests job result */
-#define MSG_JOB_RESULT       6  /* Server responds with job result */
-#define MSG_LIST_JOBS        7  /* Client requests job list */
-#define MSG_JOB_LIST         8  /* Server responds with job list */
-#define MSG_ASSIGN_JOB       9  /* Server assigns job to worker */
-#define MSG_JOB_COMPLETED    10 /* Worker completes job */
-#define MSG_WORKER_REGISTER  11 /* Worker registers with server */
-#define MSG_WORKER_ACCEPTED  12 /* Server accepts worker */
-#define MSG_WORKER_HEARTBEAT 13 /* Worker sends heartbeat */
-#define MSG_HEARTBEAT_ACK    14 /* Server acknowledges heartbeat */
-
-/* Job status codes */
+// 作业状态枚举
 typedef enum {
-    JOB_STATUS_PENDING = 0,   /* Job is pending */
-    JOB_STATUS_ASSIGNED = 1,  /* Job is assigned to a worker */
-    JOB_STATUS_COMPLETED = 2, /* Job is completed */
-    JOB_STATUS_FAILED = 3     /* Job failed */
+    JOB_STATUS_PENDING = 0,
+    JOB_STATUS_RUNNING,
+    JOB_STATUS_COMPLETED, 
+    JOB_STATUS_FAILED,
+    JOB_STATUS_TIMEOUT
 } JobStatus;
 
-/* Job information structure */
-typedef struct {
-    int id;                  /* Job ID */
-    int type;                /* Job type */
-    JobStatus status;        /* Job status */
-    int worker_id;           /* Worker ID (if assigned) */
-    time_t submit_time;      /* Job submission time */
-    time_t complete_time;    /* Job completion time (if completed) */
-} JobInfo;
+// 消息类型枚举
+typedef enum {
+    MSG_TYPE_CLIENT_CONNECT = 1,
+    MSG_TYPE_CLIENT_CONNECT_ACK,
+    MSG_TYPE_CLIENT_DISCONNECT,
+    MSG_TYPE_SUBMIT_JOB,
+    MSG_TYPE_JOB_SUBMITTED,
+    MSG_TYPE_GET_JOB_STATUS,
+    MSG_TYPE_JOB_STATUS,
+    MSG_TYPE_GET_JOB_RESULT,
+    MSG_TYPE_JOB_RESULT,
+    MSG_TYPE_GET_SERVER_STATS,
+    MSG_TYPE_SERVER_STATS,
+    MSG_TYPE_ERROR
+} MessageType;
 
-/* Job structure */
+// 消息头结构
 typedef struct {
-    int type;                           /* Job type */
-    size_t data_size;                   /* Size of job data */
-    char data[MAX_JOB_DATA_SIZE];       /* Job data */
-} Job;
+    MessageType message_type;
+    uint32_t client_id;
+} MessageHeader;
 
-/* Message structure */
+// 消息体联合
+typedef union {
+    struct {
+        uint32_t client_id;
+    } client_connect_ack;
+    
+    struct {
+        uint32_t job_type;
+        uint8_t data[1024];
+        uint32_t data_size;
+    } submit_job;
+    
+    struct {
+        uint32_t job_id;
+    } job_submitted;
+    
+    struct {
+        uint32_t job_id;
+        JobStatus status;
+    } job_status;
+    
+    struct {
+        uint32_t job_id;
+        uint8_t result_data[1024];
+        uint32_t result_size;
+    } job_result;
+    
+    struct {
+        uint32_t active_clients;
+        uint32_t active_workers;
+        uint32_t pending_jobs;
+        uint32_t running_jobs;
+        uint32_t completed_jobs;
+        uint32_t failed_jobs;
+    } server_stats;
+    
+    struct {
+        uint32_t error_code;
+        char error_message[256];
+    } error;
+} MessageBody;
+
+// 完整消息结构
 typedef struct {
-    int type;                           /* Message type */
-    int job_id;                         /* Job ID */
-    int worker_id;                      /* Worker ID */
-    JobStatus status;                   /* Job status */
-    Job job;                            /* Job data */
-    int job_count;                      /* Number of jobs in list */
-    JobInfo jobs[MAX_JOBS_IN_LIST];     /* Job list */
+    MessageHeader header;
+    MessageBody body;
 } Message;
 
-/**
- * @brief Send a message over a socket
- * 
- * @param sockfd Socket descriptor
- * @param msg Message to send
- * @return int 0 on success, -1 on failure
- */
-int send_message(int sockfd, const Message *msg);
-
-/**
- * @brief Receive a message from a socket
- * 
- * @param sockfd Socket descriptor
- * @param msg Buffer to store received message
- * @return int 0 on success, -1 on failure
- */
-int receive_message(int sockfd, Message *msg);
-
-/**
- * @brief Convert job status to string
- * 
- * @param status Job status
- * @return const char* String representation of job status
- */
-const char *job_status_to_string(JobStatus status);
-
-#endif /* PROTOCOL_H */
+#endif // PROTOCOL_H

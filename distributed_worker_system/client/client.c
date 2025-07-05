@@ -28,7 +28,7 @@ static long long get_current_time_ms();
 
 int client_init(const ClientConfig *config) {
     if (!config) {
-        log_error("Invalid client configuration");
+        LOG_ERROR("Invalid client configuration");
         return -1;
     }
 
@@ -239,7 +239,7 @@ int client_get_job_status(int job_id) {
     memset(&msg, 0, sizeof(Message));
     msg.header.message_type = MSG_TYPE_GET_JOB_STATUS;
     msg.header.client_id = g_client.client_id;
-    msg.body.get_job_status.job_id = job_id;
+    msg.body.job_status.job_id = job_id;
     
     int socket = g_client.server_socket;
     
