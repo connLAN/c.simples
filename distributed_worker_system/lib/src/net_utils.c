@@ -6,9 +6,15 @@
 #include <sys/socket.h>
 
 int send_message(int sockfd, const Message *msg) {
+    Message net_msg = *msg;
+    // 转换头字段为网络字节序
+    net_msg.header.message_type = htonl(net_msg.header.message_type);
+    net_msg.header.client_id = htonl(net_msg.header.client_id);
+    net_msg.header.client_id = htonl(net_msg.header.client_id);
+    
     ssize_t total = 0;
     ssize_t bytes_left = sizeof(Message);
-    const char *ptr = (const char *)msg;
+    const char *ptr = (const char *)&net_msg;
     
     while (bytes_left > 0) {
         ssize_t n = write(sockfd, ptr + total, bytes_left);
@@ -31,6 +37,11 @@ int receive_message(int sockfd, Message *msg) {
         total += n;
         bytes_left -= n;
     }
+    
+    // 转换头字段为主机字节序
+    msg->header.message_type = ntohl(msg->header.message_type);
+    msg->header.client_id = ntohl(msg->header.client_id);
+    msg->header.client_id = ntohl(msg->header.client_id);
     
     return 0;
 }
