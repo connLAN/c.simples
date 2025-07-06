@@ -4,9 +4,21 @@
 echo "Starting smoke test..."
 echo "----------------------"
 
+# Kill any existing processes
+echo "[0/6] Killing existing processes..."
+pkill -f central_server_exec || true
+pkill -f worker_server_exec || true
+sleep 1
+
 # Clean previous build
 echo "[1/6] Cleaning and rebuilding..."
 make clean && make || { echo "Build failed"; exit 1; }
+
+# Kill any processes that might have been started during build
+echo "[1.5/6] Ensuring clean state..."
+pkill -f central_server_exec || true
+pkill -f worker_server_exec || true
+sleep 1
 
 # Start services
 echo "[2/6] Starting central server..."
