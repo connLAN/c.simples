@@ -16,7 +16,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "../common/comm_protocol.h"
+#include "../common/protocol.h"
 #include "../common/net_utils.h"
 #include "../common/logger.h"
 #include "worker_registry.h"
@@ -41,6 +41,8 @@ static task_manager_t *task_manager = NULL;
 void *worker_handler_thread(void *arg);
 void *timeout_checker_thread(void *arg);
 void signal_handler(int sig);
+int recv_payload(int sockfd, void *buf, size_t len);
+int set_socket_timeout(int sockfd, int timeout_sec);
 
 /* Initialize the server */
 int initialize_server(void) {
@@ -68,7 +70,7 @@ int initialize_server(void) {
     }
     
     /* Create server socket */
-    server_socket = create_server_socket(SERVER_PORT, 10);
+    server_socket = create_server_socket(SERVER_PORT);
     if (server_socket < 0) {
         LOG_ERROR("Failed to create server socket");
         task_manager_destroy(task_manager);
@@ -86,7 +88,7 @@ int initialize_server(void) {
 }
 
 /* Clean up server resources */
-void cleanup_server(void) {
+int cleanup_server(void) {
     LOG_INFO("Shutting down central server...");
     
     /* Close server socket */
@@ -109,6 +111,7 @@ void cleanup_server(void) {
     
     /* Close logger */
     logger_close();
+    return 0;
 }
 
 /* Handle worker registration */
@@ -147,13 +150,16 @@ void handle_worker_heartbeat(uint32_t worker_id, int sockfd) {
     }
     
     /* Send heartbeat response */
-    if (send_message(sockfd, MSG_TYPE_HEARTBEAT_RESPONSE, worker_id, NULL, 0) < 0) {
+    Message hb_msg = {
+        .header = {MSG_TYPE_HEARTBEAT_RESPONSE, worker_id}
+    };
+    if (send_message(sockfd, &hb_msg) < 0) {
         LOG_WARNING("Failed to send heartbeat response to worker %u", worker_id);
     }
 }
 
 /* Handle task result */
-void handle_task_result(uint32_t worker_id, int sockfd, const msg_header_t *header) {
+void handle_task_result(uint32_t worker_id, int sockfd, const MessageHeader *header) {
     task_result_t result;
     worker_info_t *worker;
     
@@ -186,7 +192,10 @@ void handle_task_result(uint32_t worker_id, int sockfd, const msg_header_t *head
     }
     
     /* Send result acknowledgment */
-    if (send_message(sockfd, MSG_TYPE_RESULT_ACK, result.task_id, NULL, 0) < 0) {
+    Message ack_msg = {
+        .header = {MSG_TYPE_RESULT_ACK, result.task_id}
+    };
+    if (send_message(sockfd, &ack_msg) < 0) {
         LOG_WARNING("Failed to send result acknowledgment to worker %u", worker_id);
     }
 }
@@ -221,8 +230,14 @@ int assign_task_to_worker(uint32_t worker_id) {
     worker_registry_update_status(worker_registry, worker_id, WORKER_STATUS_BUSY);
     
     /* Send task to worker */
-    if (send_message(worker->sockfd, MSG_TYPE_TASK, task->task_id, 
-                    task->input_data, MAX_DATA_SIZE) < 0) {
+    Message task_msg = {
+        .header = {MSG_TYPE_TASK, task->task_id},
+        .body.submit_job = {
+            .data_size = MAX_DATA_SIZE
+        }
+    };
+    memcpy(task_msg.body.submit_job.data, task->input_data, MAX_DATA_SIZE);
+    if (send_message(worker->sockfd, &task_msg) < 0) {
         LOG_ERROR("Failed to send task %u to worker %u", task->task_id, worker_id);
         worker_registry_update_status(worker_registry, worker_id, WORKER_STATUS_IDLE);
         free(task);
@@ -237,7 +252,7 @@ int assign_task_to_worker(uint32_t worker_id) {
 void *worker_handler_thread(void *arg) {
     int sockfd = *((int *)arg);
     uint32_t worker_id = 0;
-    msg_header_t header;
+    MessageHeader header;
     int result;
     
     free(arg); /* Free the socket descriptor pointer */
@@ -254,8 +269,8 @@ void *worker_handler_thread(void *arg) {
         return NULL;
     }
     
-    if (header.msg_type != MSG_TYPE_REGISTER) {
-        LOG_ERROR("Expected registration message, got type %u", header.msg_type);
+    if (header.message_type != MSG_TYPE_REGISTER) {
+        LOG_ERROR("Expected registration message, got type %u", header.message_type);
         close(sockfd);
         return NULL;
     }
@@ -282,7 +297,7 @@ void *worker_handler_thread(void *arg) {
         }
         
         /* Process message based on type */
-        switch (header.msg_type) {
+        switch (header.message_type) {
             case MSG_TYPE_HEARTBEAT:
                 handle_worker_heartbeat(worker_id, sockfd);
                 
@@ -302,8 +317,7 @@ void *worker_handler_thread(void *arg) {
                 break;
                 
             default:
-                LOG_WARNING("Received unknown message type %u from worker %u", 
-                           header.msg_type, worker_id);
+                LOG_WARNING("Received unknown message type %u", header.message_type);
                 break;
         }
     }

@@ -1,6 +1,9 @@
 #include "net_utils.h"
+#include "protocol.h"
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
+#include <sys/socket.h>
 
 int send_message(int sockfd, const Message *msg) {
     return write(sockfd, msg, sizeof(Message));
@@ -8,6 +11,40 @@ int send_message(int sockfd, const Message *msg) {
 
 int receive_message(int sockfd, Message *msg) {
     return read(sockfd, msg, sizeof(Message));
+}
+
+int recv_header(int sockfd, MessageHeader *header) {
+    return read(sockfd, header, sizeof(MessageHeader)) == sizeof(MessageHeader) ? 0 : -1;
+}
+
+int recv_payload(int sockfd, void *buf, size_t len) {
+    return read(sockfd, buf, len) == (ssize_t)len ? 0 : -1;
+}
+
+int set_socket_timeout(int sockfd, int timeout_sec) {
+    struct timeval tv = {
+        .tv_sec = timeout_sec,
+        .tv_usec = 0
+    };
+    return setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+}
+
+int create_client_socket(const char *host, uint16_t port) {
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) return -1;
+
+    struct sockaddr_in server_addr = {
+        .sin_family = AF_INET,
+        .sin_port = htons(port),
+        .sin_addr.s_addr = inet_addr(host)
+    };
+
+    if (connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        close(sockfd);
+        return -1;
+    }
+
+    return sockfd;
 }
 
 int create_server_socket(uint16_t port) {

@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 #include <pthread.h>
-#include "../common/comm_protocol.h"
+#include "../common/protocol.h"
 #include "../common/ring_buffer.h"
 
 /* Task status */

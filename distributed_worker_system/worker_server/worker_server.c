@@ -4,6 +4,7 @@
  * This file contains the main function and task processing logic for the worker server.
  */
 
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,9 +16,10 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#define _POSIX_C_SOURCE 200809L
 #include <time.h>
 
-#include "../common/comm_protocol.h"
+#include "../common/protocol.h"
 #include "../common/net_utils.h"
 #include "../common/logger.h"
 
@@ -69,12 +71,15 @@ int connect_to_server(const char *server_ip, uint16_t server_port) {
 
 /* Register with central server */
 int register_with_server(int sockfd) {
-    msg_header_t header;
+    MessageHeader header;
     
     LOG_INFO("Registering with central server");
     
     /* Send registration request */
-    if (send_message(sockfd, MSG_TYPE_REGISTER, 0, NULL, 0) < 0) {
+    Message reg_msg = {
+        .header = {MSG_TYPE_REGISTER, 0}
+    };
+    if (send_message(sockfd, &reg_msg) < 0) {
         LOG_ERROR("Failed to send registration request: %s", strerror(errno));
         return -1;
     }
@@ -85,12 +90,12 @@ int register_with_server(int sockfd) {
         return -1;
     }
     
-    if (header.msg_type != MSG_TYPE_REGISTER_RESPONSE) {
-        LOG_ERROR("Expected registration response, got message type %u", header.msg_type);
+    if (header.message_type != MSG_TYPE_REGISTER_RESPONSE) {
+        LOG_ERROR("Expected registration response, got message type %u", header.message_type);
         return -1;
     }
     
-    worker_id = header.id;
+    worker_id = header.client_id;
     LOG_INFO("Registered with central server, assigned worker ID: %u", worker_id);
     
     return 0;
@@ -98,12 +103,15 @@ int register_with_server(int sockfd) {
 
 /* Send heartbeat to central server */
 int send_heartbeat(int sockfd) {
-    msg_header_t header;
+    MessageHeader header;
     
     pthread_mutex_lock(&socket_mutex);
     
     /* Send heartbeat message */
-    if (send_message(sockfd, MSG_TYPE_HEARTBEAT, worker_id, NULL, 0) < 0) {
+    Message hb_msg = {
+        .header = {MSG_TYPE_HEARTBEAT, worker_id}
+    };
+    if (send_message(sockfd, &hb_msg) < 0) {
         pthread_mutex_unlock(&socket_mutex);
         LOG_ERROR("Failed to send heartbeat: %s", strerror(errno));
         return -1;
@@ -118,24 +126,34 @@ int send_heartbeat(int sockfd) {
     
     pthread_mutex_unlock(&socket_mutex);
     
-    if (header.msg_type != MSG_TYPE_HEARTBEAT_RESPONSE) {
-        LOG_ERROR("Expected heartbeat response, got message type %u", header.msg_type);
-        return -1;
+    switch (header.message_type) {
+        case MSG_TYPE_HEARTBEAT_RESPONSE:
+            LOG_DEBUG("Heartbeat acknowledged by central server");
+            break;
+        case MSG_TYPE_TASK:
+            /* Received task assignment during heartbeat */
+            pthread_mutex_unlock(&socket_mutex);
+            return 1;
+        default:
+            LOG_ERROR("Expected heartbeat response, got message type %u", header.message_type);
+            return -1;
     }
-    
-    LOG_DEBUG("Heartbeat acknowledged by central server");
     
     return 0;
 }
 
 /* Send task result to central server */
 int send_task_result(int sockfd, const task_result_t *result) {
-    msg_header_t header;
+    MessageHeader header;
     
     pthread_mutex_lock(&socket_mutex);
     
     /* Send task result message */
-    if (send_message(sockfd, MSG_TYPE_TASK_RESULT, worker_id, result, sizeof(task_result_t)) < 0) {
+    Message result_msg = {
+        .header = {MSG_TYPE_TASK_RESULT, worker_id}
+    };
+    memcpy(&result_msg.body.job_result, result, sizeof(task_result_t));
+    if (send_message(sockfd, &result_msg) < 0) {
         pthread_mutex_unlock(&socket_mutex);
         LOG_ERROR("Failed to send task result: %s", strerror(errno));
         return -1;
@@ -150,8 +168,8 @@ int send_task_result(int sockfd, const task_result_t *result) {
     
     pthread_mutex_unlock(&socket_mutex);
     
-    if (header.msg_type != MSG_TYPE_RESULT_ACK) {
-        LOG_ERROR("Expected result acknowledgment, got message type %u", header.msg_type);
+    if (header.message_type != MSG_TYPE_RESULT_ACK) {
+        LOG_ERROR("Expected result acknowledgment, got message type %u", header.message_type);
         return -1;
     }
     
@@ -226,7 +244,7 @@ void signal_handler(int sig) {
 int main(int argc, char *argv[]) {
     char server_ip[16] = DEFAULT_SERVER_IP;
     uint16_t server_port = DEFAULT_SERVER_PORT;
-    msg_header_t header;
+    MessageHeader header;
     task_t task;
     task_result_t result;
     
@@ -298,7 +316,7 @@ int main(int argc, char *argv[]) {
         }
         
         /* Process message based on type */
-        switch (header.msg_type) {
+        switch (header.message_type) {
             case MSG_TYPE_TASK:
                 /* Receive task data */
                 if (recv_payload(server_socket, &task, sizeof(task)) != sizeof(task)) {
@@ -309,10 +327,10 @@ int main(int argc, char *argv[]) {
                 
                 pthread_mutex_unlock(&socket_mutex);
                 
-                LOG_INFO("Received task %u from central server", header.id);
+                LOG_INFO("Received task %u from central server", header.client_id);
                 
                 /* Process the task */
-                task.task_id = header.id;
+                task.task_id = header.client_id;
                 if (process_task(&task, &result) != 0) {
                     LOG_ERROR("Failed to process task %u", task.task_id);
                     result.status = STATUS_ERROR;
@@ -332,7 +350,7 @@ int main(int argc, char *argv[]) {
                 
             default:
                 pthread_mutex_unlock(&socket_mutex);
-                LOG_WARNING("Received unknown message type %u", header.msg_type);
+                LOG_WARNING("Received unknown message type %u", header.message_type);
                 break;
         }
     }

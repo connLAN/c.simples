@@ -93,3 +93,144 @@
 [2025-07-05 22:04:30] [ERROR] [central_server/central_server.c:248] [worker_handler_thread] Failed to receive registration from worker
 [2025-07-05 22:04:30] [ERROR] [common/net_utils.c:197] [recv_header] Failed to receive message header: Resource temporarily unavailable
 [2025-07-05 22:04:30] [ERROR] [central_server/central_server.c:248] [worker_handler_thread] Failed to receive registration from worker
+[2025-07-06 12:07:33] [INFO] [common/logger.c:86] [logger_init] Logger initialized
+[2025-07-06 12:07:33] [INFO] [central_server/central_server.c:55] [initialize_server] Central server starting...
+[2025-07-06 12:07:33] [INFO] [central_server/central_server.c:81] [initialize_server] Server socket created on port 8888
+[2025-07-06 12:07:33] [INFO] [central_server/central_server.c:382] [create_sample_task] Created sample task with ID 1
+[2025-07-06 12:07:33] [INFO] [central_server/central_server.c:341] [timeout_checker_thread] Timeout checker thread started
+[2025-07-06 12:07:33] [INFO] [central_server/central_server.c:412] [main] Central server running on port 8888
+[2025-07-06 12:09:30] [INFO] [central_server/central_server.c:427] [main] New connection from 127.0.0.1:39564
+[2025-07-06 12:09:30] [INFO] [central_server/central_server.c:263] [worker_handler_thread] New worker connection handler started
+[2025-07-06 12:09:30] [INFO] [central_server/central_server.c:128] [handle_worker_registration] Worker 1 registered
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:09:30] [WARNING] [central_server/central_server.c:320] [worker_handler_thread] Received unknown message type 0 from worker 1
+[2025-07-06 12:10:04] [WARNING] [central_server/central_server.c:350] [timeout_checker_thread] 1 workers timed out
+[2025-07-06 12:10:04] [WARNING] [central_server/central_server.c:291] [worker_handler_thread] Worker 1 timed out
+[2025-07-06 12:10:04] [INFO] [central_server/central_server.c:327] [worker_handler_thread] Worker 1 disconnected

@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <unistd.h>  /* For usleep */
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -19,6 +20,8 @@
 #include "../common/net_utils.h"
 #include "../common/protocol.h"
 #include "../common/common.h"
+
+#define MAX_DATA_SIZE 1024
 
 /* Global client instance */
 static Client g_client;
@@ -41,11 +44,11 @@ int client_init(const ClientConfig *config) {
     
     /* Initialize mutex */
     if (pthread_mutex_init(&g_client.lock, NULL) != 0) {
-        log_error("Failed to initialize client mutex: %s", strerror(errno));
+        LOG_ERROR("Failed to initialize client mutex: %s", strerror(errno));
         return -1;
     }
     
-    log_info("Client initialized");
+    LOG_INFO("Client initialized");
     
     return 0;
 }
@@ -57,7 +60,7 @@ int client_cleanup() {
     /* Cleanup resources */
     pthread_mutex_destroy(&g_client.lock);
     
-    log_info("Client cleaned up");
+    LOG_INFO("Client cleaned up");
     
     return 0;
 }
@@ -66,7 +69,7 @@ int client_connect_to_server() {
     /* Create socket */
     int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd < 0) {
-        log_error("Failed to create socket: %s", strerror(errno));
+        LOG_ERROR("Failed to create socket: %s", strerror(errno));
         return -1;
     }
     
@@ -77,13 +80,13 @@ int client_connect_to_server() {
     server_addr.sin_port = htons(g_client.config.server_port);
     
     if (inet_pton(AF_INET, g_client.config.server_ip, &server_addr.sin_addr) <= 0) {
-        log_error("Invalid server IP address: %s", g_client.config.server_ip);
+        LOG_ERROR("Invalid server IP address: %s", g_client.config.server_ip);
         close(socket_fd);
         return -1;
     }
     
     if (connect(socket_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        log_error("Failed to connect to server %s:%d: %s", 
+        LOG_ERROR("Failed to connect to server %s:%d: %s", 
                  g_client.config.server_ip, g_client.config.server_port, strerror(errno));
         close(socket_fd);
         return -1;
@@ -95,20 +98,20 @@ int client_connect_to_server() {
     msg.header.message_type = MSG_TYPE_CLIENT_CONNECT;
     
     if (send_message(socket_fd, &msg) < 0) {
-        log_error("Failed to send client connect message");
+        LOG_ERROR("Failed to send client connect message");
         close(socket_fd);
         return -1;
     }
     
     /* Receive connect acknowledgment */
     if (receive_message(socket_fd, &msg) < 0) {
-        log_error("Failed to receive connect acknowledgment");
+        LOG_ERROR("Failed to receive connect acknowledgment");
         close(socket_fd);
         return -1;
     }
     
     if (msg.header.message_type != MSG_TYPE_CLIENT_CONNECT_ACK) {
-        log_error("Unexpected response to connect message: %d", msg.header.message_type);
+        LOG_ERROR("Unexpected response to connect message: %d", msg.header.message_type);
         close(socket_fd);
         return -1;
     }
@@ -120,7 +123,7 @@ int client_connect_to_server() {
     g_client.client_id = msg.body.client_connect_ack.client_id;
     pthread_mutex_unlock(&g_client.lock);
     
-    log_info("Connected to server %s:%d, client ID: %d", 
+    LOG_INFO("Connected to server %s:%d, client ID: %d", 
              g_client.config.server_ip, g_client.config.server_port, g_client.client_id);
     
     return 0;
@@ -152,14 +155,14 @@ int client_disconnect_from_server() {
     
     pthread_mutex_unlock(&g_client.lock);
     
-    log_info("Disconnected from server");
+    LOG_INFO("Disconnected from server");
     
     return 0;
 }
 
 int client_submit_job(int job_type, const char *input_data, size_t input_size) {
     if (!input_data && input_size > 0) {
-        log_error("Invalid input data");
+        LOG_ERROR("Invalid input data");
         return -1;
     }
     
@@ -167,7 +170,7 @@ int client_submit_job(int job_type, const char *input_data, size_t input_size) {
     
     if (!g_client.is_connected) {
         pthread_mutex_unlock(&g_client.lock);
-        log_error("Not connected to server");
+        LOG_ERROR("Not connected to server");
         return -1;
     }
     
@@ -182,7 +185,7 @@ int client_submit_job(int job_type, const char *input_data, size_t input_size) {
     if (input_size > 0) {
         if (input_size > MAX_DATA_SIZE) {
             pthread_mutex_unlock(&g_client.lock);
-            log_error("Input data size exceeds maximum allowed size");
+            LOG_ERROR("Input data size exceeds maximum allowed size");
             return -1;
         }
         
@@ -197,30 +200,30 @@ int client_submit_job(int job_type, const char *input_data, size_t input_size) {
     
     /* Send job submission message */
     if (send_message(socket, &msg) < 0) {
-        log_error("Failed to send job submission message");
+        LOG_ERROR("Failed to send job submission message");
         return -1;
     }
     
     /* Receive job submission response */
     if (receive_message(socket, &msg) < 0) {
-        log_error("Failed to receive job submission response");
+        LOG_ERROR("Failed to receive job submission response");
         return -1;
     }
     
     if (msg.header.message_type == MSG_TYPE_ERROR) {
-        log_error("Job submission failed: %s (code %d)", 
+        LOG_ERROR("Job submission failed: %s (code %d)", 
                  msg.body.error.error_message, msg.body.error.error_code);
         return -1;
     }
     
     if (msg.header.message_type != MSG_TYPE_JOB_SUBMITTED) {
-        log_error("Unexpected response to job submission: %d", msg.header.message_type);
+        LOG_ERROR("Unexpected response to job submission: %d", msg.header.message_type);
         return -1;
     }
     
     int job_id = msg.body.job_submitted.job_id;
     
-    log_info("Job submitted successfully, job ID: %d", job_id);
+    LOG_INFO("Job submitted successfully, job ID: %d", job_id);
     
     return job_id;
 }
@@ -230,7 +233,7 @@ int client_get_job_status(int job_id) {
     
     if (!g_client.is_connected) {
         pthread_mutex_unlock(&g_client.lock);
-        log_error("Not connected to server");
+        LOG_ERROR("Not connected to server");
         return -1;
     }
     
@@ -247,37 +250,37 @@ int client_get_job_status(int job_id) {
     
     /* Send job status request message */
     if (send_message(socket, &msg) < 0) {
-        log_error("Failed to send job status request message");
+        LOG_ERROR("Failed to send job status request message");
         return -1;
     }
     
     /* Receive job status response */
     if (receive_message(socket, &msg) < 0) {
-        log_error("Failed to receive job status response");
+        LOG_ERROR("Failed to receive job status response");
         return -1;
     }
     
     if (msg.header.message_type == MSG_TYPE_ERROR) {
-        log_error("Job status request failed: %s (code %d)", 
+        LOG_ERROR("Job status request failed: %s (code %d)", 
                  msg.body.error.error_message, msg.body.error.error_code);
         return -1;
     }
     
     if (msg.header.message_type != MSG_TYPE_JOB_STATUS) {
-        log_error("Unexpected response to job status request: %d", msg.header.message_type);
+        LOG_ERROR("Unexpected response to job status request: %d", msg.header.message_type);
         return -1;
     }
     
     int status = msg.body.job_status.status;
     
-    log_debug("Job %d status: %d", job_id, status);
+    LOG_DEBUG("Job %d status: %d", job_id, status);
     
     return status;
 }
 
 int client_get_job_result(int job_id, char **result_data, size_t *result_size) {
     if (!result_data || !result_size) {
-        log_error("Invalid result pointers");
+        LOG_ERROR("Invalid result pointers");
         return -1;
     }
     
@@ -289,7 +292,7 @@ int client_get_job_result(int job_id, char **result_data, size_t *result_size) {
     
     if (!g_client.is_connected) {
         pthread_mutex_unlock(&g_client.lock);
-        log_error("Not connected to server");
+        LOG_ERROR("Not connected to server");
         return -1;
     }
     
@@ -298,7 +301,7 @@ int client_get_job_result(int job_id, char **result_data, size_t *result_size) {
     memset(&msg, 0, sizeof(Message));
     msg.header.message_type = MSG_TYPE_GET_JOB_RESULT;
     msg.header.client_id = g_client.client_id;
-    msg.body.get_job_result.job_id = job_id;
+    msg.body.job_result.job_id = job_id;
     
     int socket = g_client.server_socket;
     
@@ -306,24 +309,24 @@ int client_get_job_result(int job_id, char **result_data, size_t *result_size) {
     
     /* Send job result request message */
     if (send_message(socket, &msg) < 0) {
-        log_error("Failed to send job result request message");
+        LOG_ERROR("Failed to send job result request message");
         return -1;
     }
     
     /* Receive job result response */
     if (receive_message(socket, &msg) < 0) {
-        log_error("Failed to receive job result response");
+        LOG_ERROR("Failed to receive job result response");
         return -1;
     }
     
     if (msg.header.message_type == MSG_TYPE_ERROR) {
-        log_error("Job result request failed: %s (code %d)", 
+        LOG_ERROR("Job result request failed: %s (code %d)", 
                  msg.body.error.error_message, msg.body.error.error_code);
         return -1;
     }
     
     if (msg.header.message_type != MSG_TYPE_JOB_RESULT) {
-        log_error("Unexpected response to job result request: %d", msg.header.message_type);
+        LOG_ERROR("Unexpected response to job result request: %d", msg.header.message_type);
         return -1;
     }
     
@@ -332,7 +335,7 @@ int client_get_job_result(int job_id, char **result_data, size_t *result_size) {
     if (data_size > 0) {
         char *data_copy = (char *)malloc(data_size);
         if (!data_copy) {
-            log_error("Failed to allocate memory for result data");
+            LOG_ERROR("Failed to allocate memory for result data");
             return -1;
         }
         
@@ -341,7 +344,7 @@ int client_get_job_result(int job_id, char **result_data, size_t *result_size) {
         *result_size = data_size;
     }
     
-    log_debug("Retrieved result for job %d, size: %zu", job_id, data_size);
+    LOG_DEBUG("Retrieved result for job %d, size: %zu", job_id, data_size);
     
     return 0;
 }
@@ -355,7 +358,7 @@ int client_wait_for_job(int job_id, int timeout_seconds) {
         int status = client_get_job_status(job_id);
         
         if (status < 0) {
-            log_error("Failed to get job status");
+            LOG_ERROR("Failed to get job status");
             return -1;
         }
         
@@ -369,7 +372,7 @@ int client_wait_for_job(int job_id, int timeout_seconds) {
         if (timeout_seconds > 0) {
             long long elapsed_ms = get_current_time_ms() - start_time;
             if (elapsed_ms >= timeout_ms) {
-                log_error("Timeout waiting for job %d", job_id);
+                LOG_ERROR("Timeout waiting for job %d", job_id);
                 return -1;
             }
         }
@@ -388,7 +391,7 @@ int client_get_server_stats(int *active_clients, int *active_workers,
     
     if (!g_client.is_connected) {
         pthread_mutex_unlock(&g_client.lock);
-        log_error("Not connected to server");
+        LOG_ERROR("Not connected to server");
         return -1;
     }
     
@@ -404,24 +407,24 @@ int client_get_server_stats(int *active_clients, int *active_workers,
     
     /* Send server stats request message */
     if (send_message(socket, &msg) < 0) {
-        log_error("Failed to send server stats request message");
+        LOG_ERROR("Failed to send server stats request message");
         return -1;
     }
     
     /* Receive server stats response */
     if (receive_message(socket, &msg) < 0) {
-        log_error("Failed to receive server stats response");
+        LOG_ERROR("Failed to receive server stats response");
         return -1;
     }
     
     if (msg.header.message_type == MSG_TYPE_ERROR) {
-        log_error("Server stats request failed: %s (code %d)", 
+        LOG_ERROR("Server stats request failed: %s (code %d)", 
                  msg.body.error.error_message, msg.body.error.error_code);
         return -1;
     }
     
     if (msg.header.message_type != MSG_TYPE_SERVER_STATS) {
-        log_error("Unexpected response to server stats request: %d", msg.header.message_type);
+        LOG_ERROR("Unexpected response to server stats request: %d", msg.header.message_type);
         return -1;
     }
     
@@ -433,7 +436,7 @@ int client_get_server_stats(int *active_clients, int *active_workers,
     if (completed_jobs) *completed_jobs = msg.body.server_stats.completed_jobs;
     if (failed_jobs) *failed_jobs = msg.body.server_stats.failed_jobs;
     
-    log_debug("Retrieved server statistics");
+    LOG_DEBUG("Retrieved server statistics");
     
     return 0;
 }
