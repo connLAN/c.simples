@@ -384,6 +384,71 @@ void create_sample_task(void) {
     }
 }
 
+/* Client handler thread function */
+void *client_handler_thread(void *arg) {
+    int sockfd = *((int *)arg);
+    MessageHeader header;
+    
+    free(arg); /* Free the socket descriptor pointer */
+    
+    LOG_INFO("New client connection handler started");
+    
+    /* Wait for client registration */
+    if (recv_header(sockfd, &header) != 0) {
+        LOG_ERROR("Failed to receive registration from client");
+        close(sockfd);
+        return NULL;
+    }
+    
+    if (header.message_type != MSG_TYPE_REGISTER) {
+        LOG_ERROR("Expected registration message, got type %u", header.message_type);
+        close(sockfd);
+        return NULL;
+    }
+    
+    /* Send registration response */
+    Message msg = {
+        .header = {MSG_TYPE_REGISTER_RESPONSE, 1},
+        .body.reg_response = {.status = 1}
+    };
+    if (send_message(sockfd, &msg) < 0) {
+        LOG_ERROR("Failed to send registration response to client");
+        close(sockfd);
+        return NULL;
+    }
+    
+    LOG_INFO("Client registered successfully");
+    
+    /* Main client communication loop */
+    while (server_running) {
+        /* Receive message header */
+        if (recv_header(sockfd, &header) != 0) {
+            LOG_ERROR("Failed to receive message from client");
+            break;
+        }
+        
+        /* Process message based on type */
+        switch (header.message_type) {
+            case MSG_TYPE_SUBMIT_JOB:
+                /* Handle job submission */
+                LOG_INFO("Received job submission from client");
+                break;
+                
+            case MSG_TYPE_CLIENT_DISCONNECT:
+                LOG_INFO("Client disconnected");
+                close(sockfd);
+                return NULL;
+                
+            default:
+                LOG_WARNING("Received unknown message type %u from client", header.message_type);
+                break;
+        }
+    }
+    
+    close(sockfd);
+    return NULL;
+}
+
 /* Main function */
 int main(void) {
     int client_socket;
@@ -436,17 +501,32 @@ int main(void) {
         
         *client_sock_ptr = client_socket;
         
-        /* Create worker handler thread */
-        pthread_t worker_thread;
-        if (pthread_create(&worker_thread, NULL, worker_handler_thread, client_sock_ptr) != 0) {
-            LOG_ERROR("Failed to create worker handler thread");
+        /* First read the message type to determine if this is a worker or client */
+        MessageHeader header;
+        if (recv_header(client_socket, &header) == 0) {
+            if (header.message_type == MSG_TYPE_REGISTER) {
+                /* Create appropriate handler thread based on message type */
+                pthread_t handler_thread;
+                void *(*handler_func)(void *) = (header.client_id == 0) ? 
+                    worker_handler_thread : client_handler_thread;
+                
+                if (pthread_create(&handler_thread, NULL, handler_func, client_sock_ptr) != 0) {
+                    LOG_ERROR("Failed to create handler thread");
+                    free(client_sock_ptr);
+                    close(client_socket);
+                    continue;
+                }
+                pthread_detach(handler_thread);
+            } else {
+                LOG_ERROR("First message must be registration");
+                free(client_sock_ptr);
+                close(client_socket);
+            }
+        } else {
+            LOG_ERROR("Failed to receive initial message");
             free(client_sock_ptr);
             close(client_socket);
-            continue;
         }
-        
-        /* Detach thread so its resources are automatically released when it terminates */
-        pthread_detach(worker_thread);
     }
     
     /* Wait for timeout checker thread to finish */

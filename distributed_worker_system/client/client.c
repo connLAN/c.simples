@@ -92,26 +92,25 @@ int client_connect_to_server() {
         return -1;
     }
     
-    /* Send client connect message */
-    Message msg;
-    memset(&msg, 0, sizeof(Message));
-    msg.header.message_type = MSG_TYPE_CLIENT_CONNECT;
-    
+    /* Send registration request */
+    Message msg = {
+        .header = {MSG_TYPE_REGISTER, 1}
+    };
     if (send_message(socket_fd, &msg) < 0) {
-        LOG_ERROR("Failed to send client connect message");
+        LOG_ERROR("Failed to send registration request: %s", strerror(errno));
         close(socket_fd);
         return -1;
     }
     
-    /* Receive connect acknowledgment */
+    /* Receive registration response */
     if (receive_message(socket_fd, &msg) < 0) {
-        LOG_ERROR("Failed to receive connect acknowledgment");
+        LOG_ERROR("Failed to receive registration response: %s", strerror(errno));
         close(socket_fd);
         return -1;
     }
     
-    if (msg.header.message_type != MSG_TYPE_CLIENT_CONNECT_ACK) {
-        LOG_ERROR("Unexpected response to connect message: %d", msg.header.message_type);
+    if (msg.header.message_type != MSG_TYPE_REGISTER_RESPONSE) {
+        LOG_ERROR("Expected registration response, got message type %d", msg.header.message_type);
         close(socket_fd);
         return -1;
     }

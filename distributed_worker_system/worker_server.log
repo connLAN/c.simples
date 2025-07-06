@@ -1,166 +1,20 @@
-[2025-07-05 20:49:03] [INFO] [common/logger.c:86] [logger_init] Logger initialized
-[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:252] [main] Worker server starting...
-[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:49] [connect_to_server] Connecting to central server at 127.0.0.1:8888 (attempt 1/5)
-[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:54] [connect_to_server] Connected to central server
-[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:74] [register_with_server] Registering with central server
-[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:94] [register_with_server] Registered with central server, assigned worker ID: 1
-[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:282] [main] Worker server running, waiting for tasks...
-[2025-07-05 20:49:03] [INFO] [worker_server/worker_server.c:203] [heartbeat_thread] Heartbeat thread started
-[2025-07-06 12:00:10] [INFO] [common/logger.c:86] [logger_init] Logger initialized
-[2025-07-06 12:00:10] [INFO] [worker_server/worker_server.c:264] [main] Worker server starting...
-[2025-07-06 12:00:10] [INFO] [worker_server/worker_server.c:51] [connect_to_server] Connecting to central server at 127.0.0.1:8888 (attempt 1/5)
-[2025-07-06 12:00:10] [ERROR] [worker_server/worker_server.c:60] [connect_to_server] Failed to connect to central server: Connection refused
-[2025-07-06 12:00:10] [INFO] [worker_server/worker_server.c:64] [connect_to_server] Retrying in 5 seconds...
-[2025-07-06 12:00:15] [INFO] [worker_server/worker_server.c:51] [connect_to_server] Connecting to central server at 127.0.0.1:8888 (attempt 2/5)
-[2025-07-06 12:00:15] [ERROR] [worker_server/worker_server.c:60] [connect_to_server] Failed to connect to central server: Connection refused
-[2025-07-06 12:00:15] [INFO] [worker_server/worker_server.c:64] [connect_to_server] Retrying in 5 seconds...
-[2025-07-06 12:00:20] [INFO] [worker_server/worker_server.c:51] [connect_to_server] Connecting to central server at 127.0.0.1:8888 (attempt 3/5)
-[2025-07-06 12:00:20] [ERROR] [worker_server/worker_server.c:60] [connect_to_server] Failed to connect to central server: Connection refused
-[2025-07-06 12:00:20] [INFO] [worker_server/worker_server.c:64] [connect_to_server] Retrying in 5 seconds...
-[2025-07-06 12:00:28] [INFO] [worker_server/worker_server.c:51] [connect_to_server] Connecting to central server at 127.0.0.1:8888 (attempt 4/5)
-[2025-07-06 12:00:28] [ERROR] [worker_server/worker_server.c:60] [connect_to_server] Failed to connect to central server: Connection refused
-[2025-07-06 12:00:28] [INFO] [worker_server/worker_server.c:64] [connect_to_server] Retrying in 5 seconds...
-[2025-07-06 12:00:33] [INFO] [worker_server/worker_server.c:51] [connect_to_server] Connecting to central server at 127.0.0.1:8888 (attempt 5/5)
-[2025-07-06 12:00:33] [ERROR] [worker_server/worker_server.c:60] [connect_to_server] Failed to connect to central server: Connection refused
-[2025-07-06 12:00:33] [FATAL] [worker_server/worker_server.c:273] [main] Failed to connect to central server after 5 attempts
-[2025-07-06 12:09:30] [INFO] [common/logger.c:86] [logger_init] Logger initialized
-[2025-07-06 12:09:30] [INFO] [worker_server/worker_server.c:264] [main] Worker server starting...
-[2025-07-06 12:09:30] [INFO] [worker_server/worker_server.c:51] [connect_to_server] Connecting to central server at 127.0.0.1:8888 (attempt 1/5)
-[2025-07-06 12:09:30] [INFO] [worker_server/worker_server.c:56] [connect_to_server] Connected to central server
-[2025-07-06 12:09:30] [INFO] [worker_server/worker_server.c:76] [register_with_server] Registering with central server
-[2025-07-06 12:09:30] [INFO] [worker_server/worker_server.c:99] [register_with_server] Registered with central server, assigned worker ID: 1
-[2025-07-06 12:09:30] [INFO] [worker_server/worker_server.c:294] [main] Worker server running, waiting for tasks...
-[2025-07-06 12:09:30] [INFO] [worker_server/worker_server.c:215] [heartbeat_thread] Heartbeat thread started
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 1
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:09:30] [WARNING] [worker_server/worker_server.c:347] [main] Received unknown message type 0
-[2025-07-06 12:10:04] [ERROR] [worker_server/worker_server.c:308] [main] Failed to receive message from server: Success
-[2025-07-06 12:10:04] [ERROR] [worker_server/worker_server.c:123] [send_heartbeat] Failed to receive heartbeat response: Success
-[2025-07-06 12:10:04] [ERROR] [worker_server/worker_server.c:223] [heartbeat_thread] Heartbeat failed, server may be down
-[2025-07-06 12:10:04] [INFO] [worker_server/worker_server.c:362] [main] Worker server shutting down
+[32m[2025-07-06 14:21:23] [INFO] [lib/src/logger.c:86] [logger_init] Logger initialized
+[0m[32m[2025-07-06 14:21:23] [INFO] [worker_server/worker_server.c:282] [main] Worker server starting...
+[0m[32m[2025-07-06 14:21:23] [INFO] [worker_server/worker_server.c:51] [connect_to_server] Connecting to central server at 127.0.0.1:8888 (attempt 1/5)
+[0m[32m[2025-07-06 14:21:23] [INFO] [worker_server/worker_server.c:56] [connect_to_server] Connected to central server
+[0m[32m[2025-07-06 14:21:23] [INFO] [worker_server/worker_server.c:76] [register_with_server] Registering with central server
+[0m[33m[2025-07-06 14:21:23] [WARNING] [worker_server/worker_server.c:96] [register_with_server] Failed to receive registration response: Connection reset by peer (retries left: 2)
+[0m[33m[2025-07-06 14:21:24] [WARNING] [worker_server/worker_server.c:96] [register_with_server] Failed to receive registration response: Connection reset by peer (retries left: 1)
+[0m[33m[2025-07-06 14:21:25] [WARNING] [worker_server/worker_server.c:96] [register_with_server] Failed to receive registration response: Connection reset by peer (retries left: 0)
+[0m[31m[2025-07-06 14:21:25] [ERROR] [worker_server/worker_server.c:106] [register_with_server] Failed to get valid registration response after retries
+[0m[35m[2025-07-06 14:21:25] [FATAL] [worker_server/worker_server.c:298] [main] Failed to register with central server
+[0m [worker_server/worker_server.c:76] [register_with_server] Registering with central server
+[2025-07-06 14:21:23] [WARNING] [worker_server/worker_server.c:96] [register_with_server] Failed to receive registration response: Connection reset by peer (retries left: 2)
+[2025-07-06 14:21:24] [WARNING] [worker_server/worker_server.c:96] [register_with_server] Failed to receive registration response: Connection reset by peer (retries left: 1)
+[2025-07-06 14:21:24] [WARNING] [worker_server/worker_server.c:96] [register_with_server] Failed to receive registration response: Connection reset by peer (retries left: 1)
+[2025-07-06 14:21:25] [WARNING] [worker_server/worker_server.c:96] [register_with_server] Failed to receive registration response: Connection reset by peer (retries left: 0)
+[2025-07-06 14:21:25] [ERROR] [worker_server/worker_server.c:106] [register_with_server] Failed to get valid registration response after retries
+[2025-07-06 14:21:25] [FATAL] [worker_server/worker_server.c:298] [main] Failed to register with central server
+[2025-07-06 14:21:25] [WARNING] [worker_server/worker_server.c:96] [register_with_server] Failed to receive registration response: Connection reset by peer (retries left: 0)
+[2025-07-06 14:21:25] [ERROR] [worker_server/worker_server.c:106] [register_with_server] Failed to get valid registration response after retries
+[2025-07-06 14:21:25] [FATAL] [worker_server/worker_server.c:298] [main] Failed to register with central server

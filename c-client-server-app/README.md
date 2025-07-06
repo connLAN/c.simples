@@ -1,4 +1,4 @@
-# C Client-Server Application / C语言客户端-服务器应用
+clear# C Client-Server Application / C语言客户端-服务器应用
 
 This project implements a simple client-server architecture in C, featuring IP address filtering through a blacklist and whitelist mechanism with dynamic configuration reloading.
 

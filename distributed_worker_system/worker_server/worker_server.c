@@ -84,14 +84,26 @@ int register_with_server(int sockfd) {
         return -1;
     }
     
-    /* Receive registration response */
-    if (recv_header(sockfd, &header) != 0) {
-        LOG_ERROR("Failed to receive registration response: %s", strerror(errno));
-        return -1;
+    /* Receive registration response with retry */
+    int retries = 3;
+    while (retries-- > 0) {
+        if (recv_header(sockfd, &header) == 0) {
+            if (header.message_type == MSG_TYPE_REGISTER_RESPONSE) {
+                break;
+            }
+            LOG_WARNING("Unexpected message type %u, expected REGISTER_RESPONSE", header.message_type);
+        } else {
+            LOG_WARNING("Failed to receive registration response: %s (retries left: %d)", 
+                      strerror(errno), retries);
+        }
+        
+        if (retries > 0) {
+            sleep(1);
+        }
     }
     
-    if (header.message_type != MSG_TYPE_REGISTER_RESPONSE) {
-        LOG_ERROR("Expected registration response, got message type %u", header.message_type);
+    if (retries <= 0) {
+        LOG_ERROR("Failed to get valid registration response after retries");
         return -1;
     }
     

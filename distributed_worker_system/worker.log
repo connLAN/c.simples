@@ -1,0 +1,11 @@
+[32m[2025-07-06 14:21:23] [INFO] [lib/src/logger.c:86] [logger_init] Logger initialized
+[0m[32m[2025-07-06 14:21:23] [INFO] [worker_server/worker_server.c:282] [main] Worker server starting...
+[0m[32m[2025-07-06 14:21:23] [INFO] [worker_server/worker_server.c:51] [connect_to_server] Connecting to central server at 127.0.0.1:8888 (attempt 1/5)
+[0m[32m[2025-07-06 14:21:23] [INFO] [worker_server/worker_server.c:56] [connect_to_server] Connected to central server
+[0m[32m[2025-07-06 14:21:23] [INFO] [worker_server/worker_server.c:76] [register_with_server] Registering with central server
+[0m[33m[2025-07-06 14:21:23] [WARNING] [worker_server/worker_server.c:96] [register_with_server] Failed to receive registration response: Connection reset by peer (retries left: 2)
+[0m[33m[2025-07-06 14:21:24] [WARNING] [worker_server/worker_server.c:96] [register_with_server] Failed to receive registration response: Connection reset by peer (retries left: 1)
+[0m[33m[2025-07-06 14:21:25] [WARNING] [worker_server/worker_server.c:96] [register_with_server] Failed to receive registration response: Connection reset by peer (retries left: 0)
+[0m[31m[2025-07-06 14:21:25] [ERROR] [worker_server/worker_server.c:106] [register_with_server] Failed to get valid registration response after retries
+[0m[35m[2025-07-06 14:21:25] [FATAL] [worker_server/worker_server.c:298] [main] Failed to register with central server
+[0m

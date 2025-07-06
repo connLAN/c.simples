@@ -36,7 +36,7 @@ install: $(LIB_NAME).a $(LIB_NAME).so
 	mkdir -p $(INSTALL_PREFIX)/lib
 	mkdir -p $(INSTALL_PREFIX)/include
 	cp $(LIB_NAME).* $(INSTALL_PREFIX)/lib/
-	cp src/utils.h src/logger.h $(INSTALL_PREFIX)/include/
+	cp src/ipfilter.h src/utils.h src/logger.h $(INSTALL_PREFIX)/include/
 
 clean:
 	rm -f $(OBJ) $(EXEC_CLIENT) $(EXEC_SERVER) $(LIB_NAME).a $(LIB_NAME).so test_runner

@@ -6,19 +6,63 @@
 #include <sys/socket.h>
 
 int send_message(int sockfd, const Message *msg) {
-    return write(sockfd, msg, sizeof(Message));
+    ssize_t total = 0;
+    ssize_t bytes_left = sizeof(Message);
+    const char *ptr = (const char *)msg;
+    
+    while (bytes_left > 0) {
+        ssize_t n = write(sockfd, ptr + total, bytes_left);
+        if (n <= 0) return -1;
+        total += n;
+        bytes_left -= n;
+    }
+    
+    return 0;
 }
 
 int receive_message(int sockfd, Message *msg) {
-    return read(sockfd, msg, sizeof(Message));
+    ssize_t total = 0;
+    ssize_t bytes_left = sizeof(Message);
+    char *ptr = (char *)msg;
+    
+    while (bytes_left > 0) {
+        ssize_t n = read(sockfd, ptr + total, bytes_left);
+        if (n <= 0) return -1;
+        total += n;
+        bytes_left -= n;
+    }
+    
+    return 0;
 }
 
 int recv_header(int sockfd, MessageHeader *header) {
-    return read(sockfd, header, sizeof(MessageHeader)) == sizeof(MessageHeader) ? 0 : -1;
+    ssize_t total = 0;
+    ssize_t bytes_left = sizeof(MessageHeader);
+    char *ptr = (char *)header;
+    
+    while (bytes_left > 0) {
+        ssize_t n = read(sockfd, ptr + total, bytes_left);
+        if (n <= 0) return -1;
+        total += n;
+        bytes_left -= n;
+    }
+    
+    return 0;
 }
 
 int recv_payload(int sockfd, void *buf, size_t len) {
-    return read(sockfd, buf, len) == (ssize_t)len ? 0 : -1;
+    ssize_t total = 0;
+    ssize_t bytes_left = len;
+    char *ptr = (char *)buf;
+    
+    while (bytes_left > 0) {
+        ssize_t n = read(sockfd, ptr + total, bytes_left);
+        if (n <= 0) return -1;
+        total += n;
+        bytes_left -= n;
+    }
+    
+    return 0;
 }
 
 int set_socket_timeout(int sockfd, int timeout_sec) {

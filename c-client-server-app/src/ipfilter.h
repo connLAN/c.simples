@@ -1,20 +1,25 @@
 #ifndef IPFILTER_H
 #define IPFILTER_H
 
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 
-// Global counters
-extern size_t blacklist_count;
-extern size_t whitelist_count;
+// Opaque handle type
+typedef struct ipfilter_ctx ipfilter_ctx;
 
-// IP lists
-extern char blacklist_ips[100][16];
-extern char whitelist_ips[100][16];
+// Create/destroy IP filter context
+ipfilter_ctx* ipfilter_create();
+void ipfilter_destroy(ipfilter_ctx* ctx);
 
-// Function declarations
-void init_ip_lists();
-int is_ip_blacklisted(const char* ip);
-int is_ip_whitelisted(const char* ip);
+// Initialize IP lists (load from files)
+int ipfilter_init(ipfilter_ctx* ctx, const char* blacklist_file, const char* whitelist_file);
+
+// Check IP status
+bool ipfilter_is_blacklisted(ipfilter_ctx* ctx, const char* ip);
+bool ipfilter_is_whitelisted(ipfilter_ctx* ctx, const char* ip);
+
+// Get counts (optional)
+size_t ipfilter_blacklist_count(ipfilter_ctx* ctx);
+size_t ipfilter_whitelist_count(ipfilter_ctx* ctx);
 
 #endif // IPFILTER_H
