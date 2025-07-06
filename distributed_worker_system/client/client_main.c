@@ -11,9 +11,9 @@
 #include <getopt.h>
 
 #include "client.h"
-#include "../common/logger.h"
-#include "../common/common.h"
-#include "../common/protocol.h"
+#include "../lib/include/logger.h"
+#include "../lib/include/common.h"
+#include "../lib/include/protocol.h"
 
 /* Default configuration values */
 #define DEFAULT_SERVER_IP      "127.0.0.1"

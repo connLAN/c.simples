@@ -9,8 +9,9 @@
 
 #include <stdint.h>
 #include <pthread.h>
-#include "../common/protocol.h"
-#include "../common/ring_buffer.h"
+#include <time.h>
+#include "../lib/include/ring_buffer.h"
+#include "../lib/include/protocol.h"
 
 /* Task status */
 typedef enum {

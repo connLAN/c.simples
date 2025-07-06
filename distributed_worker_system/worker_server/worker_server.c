@@ -19,9 +19,9 @@
 #define _POSIX_C_SOURCE 200809L
 #include <time.h>
 
-#include "../common/protocol.h"
-#include "../common/net_utils.h"
-#include "../common/logger.h"
+#include "../lib/include/protocol.h"
+#include "../lib/include/net_utils.h"
+#include "../lib/include/logger.h"
 
 /* Configuration constants */
 #define DEFAULT_SERVER_IP "127.0.0.1"

@@ -16,9 +16,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "../common/protocol.h"
-#include "../common/net_utils.h"
-#include "../common/logger.h"
+#include "../lib/include/protocol.h"
+#include "../lib/include/net_utils.h"
+#include "../lib/include/logger.h"
 #include "worker_registry.h"
 #include "task_manager.h"
 

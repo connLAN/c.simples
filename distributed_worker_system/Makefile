@@ -12,12 +12,15 @@ WORKER_DIR = worker_server
 CLIENT_DIR = client
 BUILD_DIR = build
 
-# Common source files
-COMMON_SRCS = $(COMMON_DIR)/logger.c \
-              $(COMMON_DIR)/net_utils.c \
-              $(COMMON_DIR)/ring_buffer.c \
-              $(COMMON_DIR)/protocol.c \
-              $(COMMON_DIR)/common.c
+# Library source files
+LIB_DIR = lib
+LIB_SRCS = $(LIB_DIR)/src/net_utils.c \
+           $(LIB_DIR)/src/ring_buffer.c \
+           $(LIB_DIR)/src/protocol.c \
+           $(LIB_DIR)/src/logger.c
+
+# Common source files (project specific)
+COMMON_SRCS = $(COMMON_DIR)/common.c
 
 # Central server source files
 CENTRAL_SRCS = $(CENTRAL_DIR)/central_server.c \
@@ -32,10 +35,12 @@ CLIENT_SRCS = $(CLIENT_DIR)/client.c \
               $(CLIENT_DIR)/client_main.c
 
 # Object files
+LIB_OBJS = $(LIB_SRCS:%.c=$(BUILD_DIR)/%.o)
 COMMON_OBJS = $(COMMON_SRCS:%.c=$(BUILD_DIR)/%.o)
 CENTRAL_OBJS = $(CENTRAL_SRCS:%.c=$(BUILD_DIR)/%.o)
 WORKER_OBJS = $(WORKER_SRCS:%.c=$(BUILD_DIR)/%.o)
 CLIENT_OBJS = $(CLIENT_SRCS:%.c=$(BUILD_DIR)/%.o)
+LIBRARY = $(BUILD_DIR)/libdws.a
 
 # Executables
 CENTRAL_SERVER = $(BUILD_DIR)/central_server_exec
@@ -52,34 +57,43 @@ directories:
 	@mkdir -p $(BUILD_DIR)/$(CENTRAL_DIR)
 	@mkdir -p $(BUILD_DIR)/$(WORKER_DIR)
 	@mkdir -p $(BUILD_DIR)/$(CLIENT_DIR)
+	@mkdir -p $(BUILD_DIR)/$(LIB_DIR)/src
+
+# Build library
+$(LIBRARY): $(LIB_OBJS)
+	ar rcs $@ $^
 
 # Central server
-$(CENTRAL_SERVER): $(COMMON_OBJS) $(CENTRAL_OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+$(CENTRAL_SERVER): $(LIBRARY) $(COMMON_OBJS) $(CENTRAL_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(COMMON_OBJS) $(CENTRAL_OBJS) -L$(BUILD_DIR) -ldws $(LDFLAGS)
 
 # Worker server
-$(WORKER_SERVER): $(COMMON_OBJS) $(WORKER_OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+$(WORKER_SERVER): $(LIBRARY) $(COMMON_OBJS) $(WORKER_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(COMMON_OBJS) $(WORKER_OBJS) -L$(BUILD_DIR) -ldws $(LDFLAGS)
 
 # Client
-$(CLIENT): $(COMMON_OBJS) $(CLIENT_OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+$(CLIENT): $(LIBRARY) $(COMMON_OBJS) $(CLIENT_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(COMMON_OBJS) $(CLIENT_OBJS) -L$(BUILD_DIR) -ldws $(LDFLAGS)
+
+# Compile library source files
+$(BUILD_DIR)/$(LIB_DIR)/src/%.o: $(LIB_DIR)/src/%.c
+	$(CC) $(CFLAGS) -I$(LIB_DIR)/include -c -o $@ $<
 
 # Compile common source files
 $(BUILD_DIR)/$(COMMON_DIR)/%.o: $(COMMON_DIR)/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -I$(LIB_DIR)/include -c -o $@ $<
 
 # Compile central server source files
 $(BUILD_DIR)/$(CENTRAL_DIR)/%.o: $(CENTRAL_DIR)/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -I$(LIB_DIR)/include -c -o $@ $<
 
 # Compile worker server source files
 $(BUILD_DIR)/$(WORKER_DIR)/%.o: $(WORKER_DIR)/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -I$(LIB_DIR)/include -c -o $@ $<
 
 # Compile client source files
 $(BUILD_DIR)/$(CLIENT_DIR)/%.o: $(CLIENT_DIR)/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -I$(LIB_DIR)/include -c -o $@ $<
 
 # Clean build files
 clean:

@@ -16,10 +16,10 @@
 #include <sys/time.h>
 
 #include "client.h"
-#include "../common/logger.h"
-#include "../common/net_utils.h"
-#include "../common/protocol.h"
-#include "../common/common.h"
+#include "../lib/include/logger.h"
+#include "../lib/include/net_utils.h"
+#include "../lib/include/protocol.h"
+#include "../lib/include/common.h"
 
 #define MAX_DATA_SIZE 1024
 
