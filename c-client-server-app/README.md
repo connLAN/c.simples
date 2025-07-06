@@ -51,6 +51,13 @@ c-client-server-app
 - GCC compiler (version 9.4.0 or higher)
 - Make utility
 - Linux/Unix environment (for signal handling)
+- libcjson-dev (for JSON support)
+
+Install dependencies on Ubuntu/Debian:
+```bash
+sudo apt-get update
+sudo apt-get install -y gcc make libcjson-dev
+```
 
 ### Building the Project
 
@@ -58,7 +65,18 @@ c-client-server-app
 make
 ```
 
-This will compile both client and server executables in the `src` directory.
+This will compile:
+- Client and server executables
+- Static library (libipfilter.a) 
+- Shared library (libipfilter.so)
+
+To install the libraries system-wide:
+```bash
+sudo make install
+```
+This will install:
+- Libraries to /usr/local/lib
+- Headers to /usr/local/include
 
 ### Running the Server
 
