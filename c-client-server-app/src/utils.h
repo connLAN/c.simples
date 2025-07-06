@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <stddef.h>
 extern size_t blacklist_count;
 extern size_t whitelist_count;
 

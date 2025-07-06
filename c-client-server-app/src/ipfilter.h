@@ -9,8 +9,8 @@ extern size_t blacklist_count;
 extern size_t whitelist_count;
 
 // IP lists
-extern char blacklist_ips[][16];  // Actual size defined in utils.c
-extern char whitelist_ips[][16];  // Actual size defined in utils.c
+extern char blacklist_ips[100][16];
+extern char whitelist_ips[100][16];
 
 // Function declarations
 void init_ip_lists();
